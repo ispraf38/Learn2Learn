@@ -1,6 +1,6 @@
 from loguru import logger
 
-from ProjectWindow.DataWidget.LabelerWidget.movable_widget import TContainer
+from ProjectWindow.movable_widget import MovableWidget
 
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
@@ -9,7 +9,7 @@ from PyQt6.QtGui import *
 from typing import Tuple, Union, Dict
 
 
-class Label(TContainer):
+class Label(MovableWidget):
     is_editing = pyqtSignal()
 
     COLORS = {

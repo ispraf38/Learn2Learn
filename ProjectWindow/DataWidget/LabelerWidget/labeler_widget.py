@@ -251,10 +251,18 @@ class ImageWidget(QWidget):
         numpyarray = np.asarray(bytes, dtype=np.uint8)
         self.img = cv2.imdecode(numpyarray, cv2.IMREAD_UNCHANGED)
 
-        height, width, bytesPerComponent = self.img.shape
-        bytesPerLine = 3 * width
-        cv2.cvtColor(self.img, cv2.COLOR_BGR2RGB, self.img)
-        qimg = QImage(self.img.data, width, height, bytesPerLine, QImage.Format.Format_RGB888)
+        if len(self.img.shape) == 3:
+            height, width, bytesPerComponent = self.img.shape
+            format = QImage.Format.Format_RGB888
+            bytesPerLine = 3 * width
+            cv2.cvtColor(self.img, cv2.COLOR_BGR2RGB, self.img)
+        elif len(self.img.shape) == 2:
+            height, width = self.img.shape
+            format = QImage.Format.Format_MonoLSB
+            bytesPerLine = width
+        else:
+            raise TypeError
+        qimg = QImage(self.img.data, width, height, bytesPerLine, format)
 
         self.pixmap = QPixmap.fromImage(qimg).scaledToHeight(int(screen_height * 0.8))
 
