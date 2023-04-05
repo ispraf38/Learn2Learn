@@ -35,9 +35,6 @@ class LabelWidget(QLabel):
     def updated(self):
 
         index = self.labels.index(self.current_rect) if self.current_rect is not None else -1
-        logger.debug(index)
-        logger.debug(self.current_rect)
-        logger.debug(self.labels)
 
         self.updated_rect_signal.emit(self.labels, index)
 
@@ -326,7 +323,6 @@ class LabelerWidget(WidgetWithMenu):
         self.layout().addWidget(self.image_widget)
 
     def set_current_label(self):
-        logger.debug(f'Chose row {self.menu.labels_list.currentRow()}')
         if self.image_widget.label_widget.current_rect is not None:
             self.image_widget.label_widget.set_current_widget(id=self.menu.labels_list.currentRow())
 

@@ -29,7 +29,7 @@ class Mode(Enum):
     RESIZEL = 9
 
 
-class TContainer(QWidget):
+class MovableWidget(QWidget):
     """ allow to move and resize by user"""
     menu = None
     mode = Mode.NONE
@@ -40,6 +40,10 @@ class TContainer(QWidget):
 
     def __init__(self, parent, p, cWidget):
         super().__init__(parent=parent)
+
+        self.m_infocus = True
+        self.m_showMenu = False
+        self.m_isEditing = True
 
         self.menu = QMenu(parent=self, title='menu')
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose, True)
@@ -52,10 +56,6 @@ class TContainer(QWidget):
 
         self.vLayout = QVBoxLayout(self)
         self.setChildWidget(cWidget)
-
-        self.m_infocus = True
-        self.m_showMenu = False
-        self.m_isEditing = True
         self.installEventFilter(parent)
 
     def setChildWidget(self, cWidget):
@@ -93,7 +93,7 @@ class TContainer(QWidget):
 
     def paintEvent(self, e: QtGui.QPaintEvent):
         painter = QtGui.QPainter(self)
-        color = (r, g, b, a) = (255, 0, 0, 16)
+        (r, g, b, a) = (255, 0, 0, 16)
         painter.fillRect(e.rect(), QColor(r, g, b, a))
 
         if self.m_infocus:
@@ -222,50 +222,67 @@ class TContainer(QWidget):
         if (self.mode == Mode.MOVE or self.mode == Mode.NONE) and e.buttons() and QtCore.Qt.MouseButton.LeftButton:
             toMove = e.globalPosition().toPoint() - self.position
             if toMove.x() < 0:
-                return
+                toMove.setX(0)
             if toMove.y() < 0:
-                return
+                toMove.setY(0)
             if toMove.x() > self.parentWidget().width() - self.width():
-                return
+                toMove.setX(self.parentWidget().width() - self.width())
             if toMove.y() > self.parentWidget().height() - self.height():
-                return
+                toMove.setY(self.parentWidget().height() - self.height())
             self.move(toMove)
             self.newGeometry.emit(self.geometry())
             self.parentWidget().repaint()
             return
         if (self.mode != Mode.MOVE) and e.buttons() and QtCore.Qt.MouseButton.LeftButton:
             if self.mode == Mode.RESIZETL:  # Left - Top
-                newwidth = e.globalPosition().x() - self.position.x() - self.geometry().x()
-                newheight = e.globalPosition().y() - self.position.y() - self.geometry().y()
                 toMove = e.globalPosition().toPoint() - self.position
-                self.resize(self.geometry().width() - newwidth, self.geometry().height() - newheight)
+                if toMove.x() < 0:
+                    toMove.setX(0)
+                if toMove.y() < 0:
+                    toMove.setY(0)
+                newwidth = self.geometry().x() - toMove.x()
+                newheight = self.geometry().y() - toMove.y()
+                logger.debug(f'e.globalpos: {e.globalPosition().x()}\t'
+                             f'self.position: {self.position.x()}\t'
+                             f'self.geometry: {self.geometry().x()}\t'
+                             f'self.geom.width: {self.geometry().width()}')
+                self.resize(self.geometry().width() + newwidth, self.geometry().height() + newheight)
                 self.move(toMove.x(), toMove.y())
             elif self.mode == Mode.RESIZETR:  # Right - Top
-                newheight = e.globalPosition().y() - self.position.y() - self.geometry().y()
                 toMove = e.globalPosition().toPoint() - self.position
-                self.resize(e.position().x(), self.geometry().height() - newheight)
+                if toMove.y() < 0:
+                    toMove.setY(0)
+                newheight = self.geometry().y() - toMove.y()
+                self.resize(e.position().x(), self.geometry().height() + newheight)
                 self.move(self.x(), toMove.y())
             elif self.mode == Mode.RESIZEBL:  # Left - Bottom
-                newwidth = e.globalPosition().x() - self.position.x() - self.geometry().x()
                 toMove = e.globalPosition().toPoint() - self.position
-                self.resize(self.geometry().width() - newwidth, e.position().y())
+                if toMove.x() < 0:
+                    toMove.setX(0)
+                newwidth = self.geometry().x() - toMove.x()
+                self.resize(self.geometry().width() + newwidth, e.position().y())
                 self.move(toMove.x(), self.y())
             elif self.mode == Mode.RESIZEB:  # Bottom
-                self.resize(self.width(), e.position().y())
+                self.resize(self.width(), min(e.position().y(), self.parent().height() - self.y()))
             elif self.mode == Mode.RESIZEL:  # Left
-                newwidth = e.globalPosition().x() - self.position.x() - self.geometry().x()
                 toMove = e.globalPosition().toPoint() - self.position
-                self.resize(self.geometry().width() - newwidth, self.height())
+                if toMove.x() < 0:
+                    toMove.setX(0)
+                newwidth = self.geometry().x() - toMove.x()
+                self.resize(self.geometry().width() + newwidth, self.height())
                 self.move(toMove.x(), self.y())
             elif self.mode == Mode.RESIZET:  # Top
-                newheight = e.globalPosition().y() - self.position.y() - self.geometry().y()
                 toMove = e.globalPosition().toPoint() - self.position
-                self.resize(self.width(), self.geometry().height() - newheight)
+                if toMove.y() < 0:
+                    toMove.setY(0)
+                newheight = self.geometry().y() - toMove.y()
+                self.resize(self.width(), self.geometry().height() + newheight)
                 self.move(self.x(), toMove.y())
             elif self.mode == Mode.RESIZER:  # Right
-                self.resize(e.position().x(), self.height())
+                self.resize(min(e.position().x(), self.parent().width() - self.x()), self.height())
             elif self.mode == Mode.RESIZEBR:  # Right - Bottom
-                self.resize(e.position().x(), e.position().y())
+                self.resize(min(e.position().x(), self.parent().width() - self.x()),
+                            min(e.position().y(), self.parent().height() - self.y()))
             self.parentWidget().repaint()
         self.newGeometry.emit(self.geometry())
 
@@ -287,9 +304,9 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.widget)
 
         lab1 = QLabel("Label1")
-        lab2 = QLabel("Label2")
-        con1 = TContainer(self.button, QPoint(10, 10), lab1)
-        con2 = TContainer(self.label, QPoint(20, 50), lab2)
+        lab2 = QPushButton("Label2")
+        con1 = MovableWidget(self.button, QPoint(10, 10), lab1)
+        con2 = MovableWidget(self.label, QPoint(20, 50), lab2)
 
         con1.newGeometry.connect(lambda x: print(x))
         con2.newGeometry.connect(lambda x: print(x))

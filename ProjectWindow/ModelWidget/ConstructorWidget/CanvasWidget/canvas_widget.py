@@ -21,6 +21,12 @@ class Canvas(QLabel):
         self.painter.end()
 
         self.setPixmap(self.pixmap)
+        self.layers = []
+
+    def update(self, *__args):
+        super(Canvas, self).update(*__args)
+        for layer in self.layers:
+            layer.update()
 
 
 class CanvasWidget(QScrollArea):
@@ -29,8 +35,8 @@ class CanvasWidget(QScrollArea):
         self.position = None
         self.scrolling = False
 
-        self.label = Canvas()
-        self.setWidget(self.label)
+        self.canvas = Canvas()
+        self.setWidget(self.canvas)
         logger.debug(self.horizontalScrollBar().maximum())
         logger.debug(self.horizontalScrollBar().minimum())
 
@@ -49,6 +55,5 @@ class CanvasWidget(QScrollArea):
                          round(e.globalPosition().y() - self.geometry().y()))
             self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - (pos.x() - self.position.x()))
             self.verticalScrollBar().setValue(self.verticalScrollBar().value() - (pos.y() - self.position.y()))
-            logger.debug(f'x: {pos.x()}, y: {pos.y()}')
-            logger.debug(f'dx: {pos.x() - self.position.x()}, dy: {pos.y() - self.position.y()}')
             self.position = pos
+            self.canvas.update()

@@ -53,8 +53,8 @@ class MenuContainer(QWidget):
         super(MenuContainer, self).__init__()
         self.layout_ = QStackedLayout()
         self.setLayout(self.layout_)
-        self.setMaximumWidth(600)
-        self.setMinimumWidth(300)
+        self.setMaximumWidth(400)
+        self.setMinimumWidth(200)
 
     def set_menu(self, menu: MenuWidget):
         self.layout_.addWidget(menu)

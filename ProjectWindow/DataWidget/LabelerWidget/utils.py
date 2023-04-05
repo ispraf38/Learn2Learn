@@ -82,7 +82,8 @@ class Label(MovableWidget):
         self.update()
 
     def setEditingState(self):
-        logger.debug(f'{self} state: editing')
+        if self.state != 'editing':
+            logger.debug(f'{self} state: editing')
         self.state = 'editing'
         self.m_isEditing = True
         self.is_editing.emit()
