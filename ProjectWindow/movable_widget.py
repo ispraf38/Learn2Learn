@@ -31,7 +31,7 @@ class Mode(Enum):
 
 class MovableWidget(QWidget):
     """ allow to move and resize by user"""
-    menu = None
+    # menu = None
     mode = Mode.NONE
     position = None
     inFocus = pyqtSignal(bool)
@@ -45,7 +45,7 @@ class MovableWidget(QWidget):
         self.m_showMenu = False
         self.m_isEditing = True
 
-        self.menu = QMenu(parent=self, title='menu')
+        # self.menu = QMenu(parent=self, title='menu')
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose, True)
         self.setVisible(True)
         self.setAutoFillBackground(False)
@@ -67,13 +67,13 @@ class MovableWidget(QWidget):
             self.vLayout.addWidget(cWidget)
             self.vLayout.setContentsMargins(0, 0, 0, 0)
 
-    def popupShow(self, pt: QPoint):
+    '''def popupShow(self, pt: QPoint):
         if self.menu.isEmpty:
             return
         global_ = self.mapToGlobal(pt)
         self.m_showMenu = True
         self.menu.exec(global_)
-        self.m_showMenu = False
+        self.m_showMenu = False'''
 
     def focusInEvent(self, a0: QtGui.QFocusEvent):
         self.m_infocus = True
@@ -113,7 +113,7 @@ class MovableWidget(QWidget):
             self.setCursorShape(e.pos())
             return
         if e.button() == QtCore.Qt.MouseButton.RightButton:
-            self.popupShow(e.pos())
+            # self.popupShow(e.pos())
             e.accept()
 
     def keyPressEvent(self, e: QtGui.QKeyEvent):

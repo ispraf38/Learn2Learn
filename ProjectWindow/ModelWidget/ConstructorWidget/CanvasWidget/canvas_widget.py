@@ -3,15 +3,16 @@ from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
 from loguru import logger
+from datetime import datetime
+
+from ProjectWindow.ModelWidget.ConstructorWidget.LayersLibrary.base_layer import Layer
 
 
 class Canvas(QLabel):
     def __init__(self):
         super(Canvas, self).__init__()
-        self.position = None
-        self.scrolling = False
 
-        self.pixmap = QPixmap(10000, 10000)
+        self.pixmap = QPixmap(3000, 3000)
         self.pixmap.fill(QColor(224, 224, 224))
         self.painter = QPainter(self.pixmap)
         self.painter.setPen(QColor(200, 200, 200))
@@ -22,11 +23,37 @@ class Canvas(QLabel):
 
         self.setPixmap(self.pixmap)
         self.layers = []
+        self.arrows = []
+        self.new_arrow = None
+        self.current_arrow = None
 
     def update(self, *__args):
         super(Canvas, self).update(*__args)
         for layer in self.layers:
             layer.update()
+
+    def update_arrows(self):
+        t1 = datetime.now()
+        pixmap = self.pixmap.copy()
+        t2 = datetime.now()
+        painter = QPainter(pixmap)
+        pen = QPen()
+        pen.setWidth(3)
+        for (layer1, layer2) in self.arrows:
+            p1 = QPoint(layer1.pos().x() + layer1.out_button.pos().x() + layer1.out_button.width() // 2,
+                        layer1.pos().y() + layer1.out_button.pos().y() + layer1.out_button.height())
+            p2 = QPoint(layer2.pos().x() + layer2.in_button.pos().x() + layer2.in_button.width() // 2,
+                        layer2.pos().y() + layer2.in_button.pos().y())
+            color = QColor(0, 0, 0) if (layer1, layer2) != self.current_arrow else QColor(0, 0, 255)
+            pen.setColor(color)
+            painter.setPen(pen)
+            painter.drawLine(p1, p2)
+        painter.end()
+        t3 = datetime.now()
+        self.setPixmap(pixmap)
+        logger.debug(f'\n{(t2 - t1).total_seconds()}'
+                     f'\n{(t3 - t2).total_seconds()}'
+                     f'\n{(datetime.now() - t3).total_seconds()}')
 
 
 class CanvasWidget(QScrollArea):
@@ -41,6 +68,7 @@ class CanvasWidget(QScrollArea):
         logger.debug(self.horizontalScrollBar().minimum())
 
     def mousePressEvent(self, e: QMouseEvent) -> None:
+        logger.debug(e.position())
         self.position = QPoint(round(e.globalPosition().x() - self.geometry().x()),
                                round(e.globalPosition().y() - self.geometry().y()))
         self.scrolling = True
