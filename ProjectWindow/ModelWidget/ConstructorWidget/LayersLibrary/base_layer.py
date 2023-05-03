@@ -13,16 +13,29 @@ from torch.nn import Module
 class LayerMenu(MenuWidget):
     def __init__(self, config: Config, name: str):
         super(LayerMenu, self).__init__(config)
-
         self.setLayout(QVBoxLayout())
-        params = QLabel(f'{name}\nПараметры:')
-        params.setAlignment(Qt.AlignmentFlag.AlignTop)
-        params.setMaximumHeight(80)
-        self.layout().addWidget(params)
-        self.layout().addWidget(self.get_parameters_widget())
+        label = QLabel(f'{name}\n{self.description()}\nПараметры:')
+        label.setAlignment(Qt.AlignmentFlag.AlignTop)
+        label.setMaximumHeight(120)
+        self.params = {}
+        self.parameters()
+        self.layout().addWidget(label)
+        self.layout().addWidget(self.build_parameters_widget())
 
-    def get_parameters_widget(self):
+    @property
+    def description(self):
+        return 'Нет описания'
+
+    def parameters(self):
+        pass
+
+    def build_parameters_widget(self):
+        layout = QGridLayout()
+        for n, (name, widget) in enumerate(self.params.items()):
+            layout.addWidget(QLabel(name), n, 0)
+            layout.addWidget(widget, n, 1)
         widget = QWidget()
+        widget.setLayout(layout)
         return widget
 
 
@@ -77,7 +90,7 @@ class Layer(MovableWidget):
         painter = QPainter(self)
         painter.fillRect(e.rect(), self.color)
         rect = e.rect()
-        rect.adjust(1, 1, -1, -1)
+        rect.adjust(0, 0, -1, -1)
         pen = QPen()
         pen.setColor(QColor(0, 0, 0))
         pen.setWidth(1)
@@ -90,13 +103,13 @@ class Layer(MovableWidget):
 
 
 class InputLayerMenu(LayerMenu):
-    def get_parameters_widget(self):
-        return QLabel('Псевдослой, отсюда вылезают данные')
+    def description(self):
+        return 'Псевдослой, отсюда вылезают данные'
 
 
 class OutputLayerMenu(LayerMenu):
-    def get_parameters_widget(self):
-        return QLabel('Псевдослой, сюда влезают данные')
+    def description(self):
+        return 'Псевдослой, сюда влезают данные'
 
 
 class InputLayer(Layer):

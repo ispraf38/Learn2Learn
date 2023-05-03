@@ -51,9 +51,6 @@ class Canvas(QLabel):
         painter.end()
         t3 = datetime.now()
         self.setPixmap(pixmap)
-        logger.debug(f'\n{(t2 - t1).total_seconds()}'
-                     f'\n{(t3 - t2).total_seconds()}'
-                     f'\n{(datetime.now() - t3).total_seconds()}')
 
 
 class CanvasWidget(QScrollArea):
