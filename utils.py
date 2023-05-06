@@ -2,15 +2,17 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
-
 from loguru import logger
+from typing import Tuple
+from functools import partial
 
 
 class MultiSpinBox(QWidget):
     value_changed = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, double: bool = False):
         super(MultiSpinBox, self).__init__()
+        self.double = double
         self.layout = QHBoxLayout()
         self.spinboxes = []
 
@@ -27,7 +29,10 @@ class MultiSpinBox(QWidget):
         self.setLayout(self.layout)
 
     def add_spinbox(self, value=None, rebuild=True):
-        sb = QSpinBox()
+        if self.double:
+            sb = QDoubleSpinBox()
+        else:
+            sb = QSpinBox()
         sb.setMaximum(1000000)
         if value is not None:
             sb.setValue(value)
@@ -77,17 +82,21 @@ class MultiSpinBox(QWidget):
 class FixedMultiSpinbox(QWidget):
     value_changed = pyqtSignal()
 
-    def __init__(self, num_spinbox: int):
+    def __init__(self, num_spinbox: int, double: bool = False):
         super(FixedMultiSpinbox, self).__init__()
         layout = QHBoxLayout()
         self.spinboxes = []
 
         for i in range(num_spinbox):
-            sb = QDoubleSpinBox()
-            sb.setMaximum(10)
-            sb.setDecimals(4)
-            sb.setSingleStep(0.1)
-            sb.setValue(1)
+            if double:
+                sb = QDoubleSpinBox()
+                sb.setMaximum(10)
+                sb.setDecimals(4)
+                sb.setSingleStep(0.1)
+                sb.setValue(1)
+            else:
+                sb = QSpinBox()
+                sb.setMaximum(10000)
             sb.valueChanged.connect(self.value_changed.emit)
             self.spinboxes.append(sb)
             layout.addWidget(sb)
@@ -99,3 +108,48 @@ class FixedMultiSpinbox(QWidget):
     def get_value(self):
         value = [sb.value() for sb in self.spinboxes]
         return tuple(value)
+
+
+class RangeSpinbox(QWidget):
+    value_changed = pyqtSignal()
+
+    def __init__(self, min_value: int = 1, max_value: int = 100, double: bool = False):
+        super(RangeSpinbox, self).__init__()
+        assert min_value <= max_value
+        if double:
+            self.left_spinbox = QDoubleSpinBox()
+            self.left_spinbox.setSingleStep(0.1)
+            self.left_spinbox.setDecimals(2)
+        else:
+            self.left_spinbox = QSpinBox()
+        self.left_spinbox.setMinimum(min_value)
+        self.left_spinbox.setMaximum(max_value)
+        self.left_spinbox.valueChanged.connect(partial(self.check_value, True))
+
+        if double:
+            self.right_spinbox = QDoubleSpinBox()
+            self.right_spinbox.setSingleStep(0.1)
+            self.right_spinbox.setDecimals(2)
+        else:
+            self.right_spinbox = QSpinBox()
+        self.right_spinbox.setMinimum(min_value)
+        self.right_spinbox.setMaximum(max_value)
+        self.right_spinbox.valueChanged.connect(partial(self.check_value, False))
+
+        self.setLayout(QHBoxLayout())
+        self.layout().addWidget(self.left_spinbox)
+        self.layout().addWidget(self.right_spinbox)
+
+    def set_value(self, values: Tuple[float, float]):
+        self.left_spinbox.setValue(values[0])
+        self.right_spinbox.setValue(values[1])
+
+    def get_value(self):
+        return (self.left_spinbox.value(), self.right_spinbox.value())
+
+    def check_value(self, left: bool = True):
+        if self.left_spinbox.value() > self.right_spinbox.value():
+            if left:
+                self.left_spinbox.setValue(self.right_spinbox.value())
+            else:
+                self.right_spinbox.setValue(self.left_spinbox.value())

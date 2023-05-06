@@ -4,5 +4,6 @@
     "projects_path": "D:\\Diplom\\projects",
     "project_config_name": "config.json",
     "project_data_default_path": "D:\\Diplom\\projects\\<project_name>\\Data",
-    "data_json_default_name": "markup_info.json"
+    "data_json_default_name": "markup_info.json",
+    "prehandle_default_test_image": "test.jpg"
 }

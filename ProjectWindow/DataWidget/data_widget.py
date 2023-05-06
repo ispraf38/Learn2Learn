@@ -6,6 +6,7 @@ from ProjectWindow.utils import WidgetWithTabs, MenuContainer, Config
 from ProjectWindow.DataWidget.data_handler import JsonHandler
 from ProjectWindow.DataWidget.GalleryWidget.gallery_widget import GalleryWidget
 from ProjectWindow.DataWidget.LabelerWidget.labeler_widget import LabelerWidget
+from ProjectWindow.DataWidget.PrehandleWidget.prehandle_widget import PrehandleWidget
 
 from loguru import logger
 
@@ -19,10 +20,13 @@ class DataWidget(WidgetWithTabs):
 
         self.gallery = GalleryWidget(self.menu_container, self.config, self.json_handler)
         self.labeler = LabelerWidget(self.menu_container, self.config, self.json_handler)
+        self.prehandle = PrehandleWidget(self.menu_container, self.config)
+
         self.json_handler.image_changed.connect(self.update_current_image)
 
         self.addTab(self.gallery, 'Галерея')
         self.addTab(self.labeler, 'Разметка')
+        self.addTab(self.prehandle, 'Предобработка')
         self.currentChanged.connect(self.gallery.update_visible_images)
 
     def update_current_image(self):

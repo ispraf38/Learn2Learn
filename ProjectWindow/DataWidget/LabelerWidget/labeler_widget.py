@@ -235,7 +235,6 @@ class ImageWidget(QWidget):
         self.layout().addWidget(self.label_widget)
         self.image_width = None
         self.image_height = None
-        # self.set_image()
 
     def set_image(self):
         screen_size = QApplication.primaryScreen().size()

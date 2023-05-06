@@ -13,7 +13,7 @@ from ProjectWindow.ModelWidget.ConstructorWidget.LayersLibrary.linear_layers imp
 from ProjectWindow.ModelWidget.ConstructorWidget.LayersLibrary.utility_layers import *
 
 from loguru import logger
-from typing import Type, Dict, Union, Optional
+from typing import Type, Dict, Union, Optional, Tuple
 from functools import partial
 
 
@@ -71,7 +71,7 @@ class CreateLayerMenu(QWidget):
             elif type(v) == str:
                 if v == 'delete layer':
                     self.delete_layer = button
-                elif v == 'delete_connection':
+                elif v == 'delete connection':
                     self.delete_connection = button
             else:
                 button.clicked.connect(partial(self.create_layer.emit, v))
@@ -115,46 +115,37 @@ class ConstructorWidget(WidgetWithMenu):
         super(ConstructorWidget, self).__init__(menu_container, config, ConstructorMenu)
         self.id = 2
         self.canvas = CanvasWidget()
+        self.canvas_ = self.canvas.canvas
 
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self.canvas)
 
-        self.input_layer = InputLayer(self.menu.layer_menu_container, config, self.canvas.canvas, 0,
+        self.input_layer = InputLayer(self.menu.layer_menu_container, config, self.canvas_, 0,
                                       pos=QPoint(50, 10))
-        self.input_layer.out_button.clicked.connect(lambda: self.out_button_clicked(self.input_layer))
-        self.input_layer.newGeometry.connect(lambda x: self.canvas.canvas.update_arrows())
-        self.output_layer = OutputLayer(self.menu.layer_menu_container, config, self.canvas.canvas, 1,
+        self.input_layer.out_button.clicked.connect(lambda: self.canvas_.out_button_clicked(self.input_layer))
+        self.input_layer.newGeometry.connect(lambda x: self.canvas_.update_arrows())
+        self.input_layer.chosen.connect(lambda: self.canvas_.set_current_layer(None))
+
+        self.output_layer = OutputLayer(self.menu.layer_menu_container, config, self.canvas_, 1,
                                         pos=QPoint(50, 300))
-        self.output_layer.in_button.clicked.connect(lambda: self.in_button_clicked(self.output_layer))
-        self.output_layer.newGeometry.connect(lambda x: self.canvas.canvas.update_arrows())
-        self.canvas.canvas.layers = [self.input_layer, self.output_layer]
+        self.output_layer.in_button.clicked.connect(lambda: self.canvas_.in_button_clicked(self.output_layer))
+        self.output_layer.newGeometry.connect(lambda x: self.canvas_.update_arrows())
+        self.output_layer.chosen.connect(lambda: self.canvas_.set_current_layer(None))
+
+        self.canvas_.layers = [self.input_layer, self.output_layer]
+
         self.menu.create_layer_menu.create_layer.connect(lambda x: self.create_layer(x))
+        self.menu.create_layer_menu.delete_connection.clicked.connect(self.canvas_.delete_current_connection)
+        self.menu.create_layer_menu.delete_layer.clicked.connect(self.canvas_.delete_current_layer)
 
     def create_layer(self, layer: Type[Layer]):
-        layer = layer(self.menu.layer_menu_container, self.config, self.canvas.canvas, self.id)
-        layer.in_button.clicked.connect(lambda: self.in_button_clicked(layer))
-        layer.out_button.clicked.connect(lambda: self.out_button_clicked(layer))
-        layer.newGeometry.connect(lambda x: self.canvas.canvas.update_arrows())
+        layer = layer(self.menu.layer_menu_container, self.config, self.canvas_, self.id)
+        layer.in_button.clicked.connect(lambda: self.canvas_.in_button_clicked(layer))
+        layer.out_button.clicked.connect(lambda: self.canvas_.out_button_clicked(layer))
+        layer.newGeometry.connect(lambda x: self.canvas_.update_arrows())
+        layer.chosen.connect(lambda: self.canvas_.set_current_layer(layer))
         self.id += 1
-        self.canvas.canvas.layers.append(layer)
+        self.canvas_.layers.append(layer)
+        # self.canvas_.set_current_layer(layer)
         self.canvas.update()
-        logger.info(f'Created layer')
-
-    def in_button_clicked(self, layer):
-        existing_arrow = None
-        for arrow in self.canvas.canvas.arrows:
-            if arrow[1] == layer:
-                existing_arrow = arrow
-        if self.canvas.canvas.new_arrow is None:
-            self.canvas.canvas.current_arrow = existing_arrow
-        else:
-            if existing_arrow is not None:
-                self.canvas.canvas.arrows.remove(existing_arrow)
-            current_arrow = (self.canvas.canvas.new_arrow, layer)
-            self.canvas.canvas.arrows.append(current_arrow)
-            self.canvas.canvas.new_arrow = None
-            self.canvas.canvas.current_arrow = current_arrow
-        self.canvas.canvas.update_arrows()
-
-    def out_button_clicked(self, layer):
-        self.canvas.canvas.new_arrow = layer
+        logger.info(f'Created layer {layer}')

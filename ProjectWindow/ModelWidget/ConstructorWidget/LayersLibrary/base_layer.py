@@ -40,6 +40,7 @@ class LayerMenu(MenuWidget):
 
 
 class Layer(MovableWidget):
+    chosen = pyqtSignal()
     def __init__(self,
                  menu_container: MenuContainer,
                  config: Config,
@@ -82,6 +83,9 @@ class Layer(MovableWidget):
         self.setMinimumSize(120, 70)
         self.childWidget.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
 
+    def __str__(self):
+        return self.name.text()
+
     def activate_menu(self):
         logger.debug(f'activate menu {self.menu}')
         self.menu_container.set_menu(self.menu)
@@ -100,6 +104,7 @@ class Layer(MovableWidget):
     def focusInEvent(self, a0: QFocusEvent):
         super(Layer, self).focusInEvent(a0)
         self.activate_menu()
+        self.chosen.emit()
 
 
 class InputLayerMenu(LayerMenu):

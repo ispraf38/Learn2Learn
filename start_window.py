@@ -64,6 +64,7 @@ class StartWindow(QMainWindow):
             project_config = Config(os.path.join(new_project_path, self.config.project_config_name))
             project_config.project_path = new_project_path
             project_config.project_name = new_name
+            project_config.prehandle_default_test_image = self.config.prehandle_default_test_image
 
             new_project = ProjectWindow(self.config, project_config)
             self.projects_running.append(new_project)
