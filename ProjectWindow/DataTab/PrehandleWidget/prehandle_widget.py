@@ -3,8 +3,9 @@ from PyQt6.QtGui import *
 from PyQt6.QtCore import *
 
 from ProjectWindow.utils import WidgetWithMenu, MenuContainer, Config, MenuWidget
-from ProjectWindow.DataWidget.PrehandleWidget.PrehandleLibrary.albumentations import *
-from ProjectWindow.DataWidget.PrehandleWidget.PrehandleLibrary.base_layer import PrehandleLayer
+from ProjectWindow.DataTab.PrehandleWidget.PrehandleLibrary.albumentations import *
+from ProjectWindow.DataTab.PrehandleWidget.PrehandleLibrary.base_layer import PrehandleLayer
+from ProjectWindow.DataTab.MainWidget.datasets import Transforms
 
 import os
 import numpy as np
@@ -174,13 +175,6 @@ class PrehandleLayerContainer(QWidget):
         self.current_layer = layer
 
     def gen_transform(self, to_tensor=True):
-        class Transforms:
-            def __init__(self, transforms=A.Compose([ToTensorV2()])):
-                self.transforms = transforms
-
-            def __call__(self, image, *args, **kwargs):
-                return self.transforms(image=np.array(image))['image']
-
         transforms = [layer.transform(**layer.get_params()) for layer in self.layers]
         if to_tensor:
             transforms += [ToTensorV2()]
@@ -221,7 +215,11 @@ class PrehandleWidget(WidgetWithMenu):
         self.menu.layer_menu.create_layer.connect(lambda x: self.middle_container.add_layer(x))
         self.menu.layer_menu.delete_layer.clicked.connect(self.middle_container.delete_current_layer)
 
+        self.save_button = QPushButton('Сохранить')
+        self.save_button.clicked.connect(self.gen_transform)
+
         middle_widget.layout().addWidget(self.middle_container)
+        middle_widget.layout().addWidget(self.save_button)
 
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(left_widget)
@@ -230,11 +228,14 @@ class PrehandleWidget(WidgetWithMenu):
 
         self.update_image(self.image_path)
 
+    def gen_transform(self):
+        self.transform = self.middle_container.gen_transform()
+
     def update_image(self, image_path=None):
         if image_path is None:
             image_path = self.image_path
         self.left_image.set_image(image_path)
-        self.transform = self.middle_container.gen_transform()
+        self.gen_transform()
         transform = self.middle_container.gen_transform(False)
         cv2.imwrite('temp.jpg', cv2.cvtColor(transform(self.left_image.img), cv2.COLOR_RGB2BGR))
 
@@ -242,5 +243,5 @@ class PrehandleWidget(WidgetWithMenu):
 
     def choose_image(self):
         self.image_path = QFileDialog.getOpenFileName(self, 'Open Image', self.config.project_path,
-                                           'Image Files (*.png *.jpg *.bmp)')[0]
+                                                      'Image Files (*.png *.jpg *.bmp)')[0]
         self.update_image()

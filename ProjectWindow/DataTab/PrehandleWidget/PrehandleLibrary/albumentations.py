@@ -2,7 +2,7 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
-from ProjectWindow.DataWidget.PrehandleWidget.PrehandleLibrary.base_layer import PrehandleLayer, PrehandleLayerMenu
+from ProjectWindow.DataTab.PrehandleWidget.PrehandleLibrary.base_layer import PrehandleLayer, PrehandleLayerMenu
 from ProjectWindow.utils import MenuContainer, Config
 from utils import RangeSpinbox, FixedMultiSpinbox
 

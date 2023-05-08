@@ -1,4 +1,4 @@
-from ProjectWindow.ModelWidget.ConstructorWidget.LayersLibrary.base_layer import Layer, LayerMenu
+from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.base_layer import Layer, LayerMenu
 from ProjectWindow.utils import MenuContainer, Config
 from utils import MultiSpinBox
 

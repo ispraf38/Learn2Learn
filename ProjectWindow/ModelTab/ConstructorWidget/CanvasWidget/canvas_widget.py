@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
@@ -5,7 +7,7 @@ from PyQt6.QtWidgets import *
 from loguru import logger
 from datetime import datetime
 
-from ProjectWindow.ModelWidget.ConstructorWidget.LayersLibrary.base_layer import Layer
+from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.base_layer import Layer
 
 
 class Canvas(QLabel):
@@ -34,52 +36,51 @@ class Canvas(QLabel):
             layer.update()
 
     def update_arrows(self):
-        t1 = datetime.now()
         pixmap = self.pixmap.copy()
-        t2 = datetime.now()
         painter = QPainter(pixmap)
         pen = QPen()
         pen.setWidth(3)
-        for (layer1, layer2) in self.arrows:
-            p1 = QPoint(layer1.pos().x() + layer1.out_button.pos().x() + layer1.out_button.width() // 2,
-                        layer1.pos().y() + layer1.out_button.pos().y() + layer1.out_button.height())
-            p2 = QPoint(layer2.pos().x() + layer2.in_button.pos().x() + layer2.in_button.width() // 2,
-                        layer2.pos().y() + layer2.in_button.pos().y())
-            color = QColor(0, 0, 0) if (layer1, layer2) != self.current_arrow else QColor(0, 0, 255)
+        for ((l1, b1), (l2, b2)) in self.arrows:
+            p1 = QPoint(l1.pos().x() + l1.out_buttons[b1].pos().x() + l1.out_buttons[b1].width() // 2,
+                        l1.pos().y() + l1.height())
+            p2 = QPoint(l2.pos().x() + l2.in_buttons[b2].pos().x() + l2.in_buttons[b2].width() // 2,
+                        l2.pos().y() + l2.in_buttons[b2].pos().y())
+            color = QColor(0, 0, 0) if ((l1, b1), (l2, b2)) != self.current_arrow else QColor(0, 0, 255)
             pen.setColor(color)
             painter.setPen(pen)
             painter.drawLine(p1, p2)
         painter.end()
-        t3 = datetime.now()
         self.setPixmap(pixmap)
 
-    def in_button_clicked(self, layer: Layer):
+    def in_button_clicked(self, layer: Layer, button: str):
         existing_arrow = None
         for arrow in self.arrows:
-            if arrow[1] == layer:
+            if arrow[1] == (layer, button):
                 existing_arrow = arrow
         if self.new_arrow is None:
             self.current_arrow = existing_arrow
         else:
             if existing_arrow is not None:
                 self.arrows.remove(existing_arrow)
-            current_arrow = (self.new_arrow, layer)
+            current_arrow = (self.new_arrow, (layer, button))
+            layer.previous_layers[button] = self.new_arrow
             self.arrows.append(current_arrow)
             self.new_arrow = None
             self.current_arrow = current_arrow
         self.update_arrows()
 
-    def out_button_clicked(self, layer):
-        self.new_arrow = layer
+    def out_button_clicked(self, layer: Layer, button: str):
+        self.new_arrow = (layer, button)
 
     def delete_current_connection(self):
         self.delete_connection(self.current_arrow)
         self.current_arrow = None
         self.update_arrows()
 
-    def delete_connection(self, arrow):
+    def delete_connection(self, arrow: Tuple[Tuple[Layer, str], Tuple[Layer, str]]):
         if arrow in self.arrows:
             self.arrows.remove(arrow)
+            arrow[1][0].previous_layers = None
         else:
             logger.error(f'There are no {arrow} connection')
 

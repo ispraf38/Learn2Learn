@@ -7,8 +7,8 @@ import os
 
 from ProjectWindow.utils import Config, MenuContainer, WidgetWithTabs
 from ProjectWindow.SettingsWidget.settings_widget import SettingsWidget
-from ProjectWindow.DataWidget.data_widget import DataWidget
-from ProjectWindow.ModelWidget.model_widget import ModelWidget
+from ProjectWindow.DataTab.data_tab import DataTab
+from ProjectWindow.ModelTab.model_tab import ModelTab
 
 from loguru import logger
 
@@ -20,9 +20,9 @@ class MainWidget(WidgetWithTabs):
 
         self.settings = SettingsWidget(self.menu_container, self.config)
 
-        self.data = DataWidget(self.menu_container, self.config)
+        self.data = DataTab(self.menu_container, self.config)
 
-        self.model = ModelWidget(self.menu_container, self.config)
+        self.model = ModelTab(self.menu_container, self.config)
 
         self.setTabPosition(QTabWidget.TabPosition.West)
         self.addTab(self.settings, 'Настройки')
@@ -30,6 +30,11 @@ class MainWidget(WidgetWithTabs):
         self.addTab(self.model, 'Модель')
 
         self.currentChanged.connect(self.data.gallery.update_visible_images)
+        self.data.prehandle.save_button.clicked.connect(self.set_input_layer_dataloader)
+
+    def set_input_layer_dataloader(self):
+        self.data.reset_dataloader()
+        self.model.constructor.input_layer.set_dataloader(self.data.train_dataloader, self.data.val_dataloader)
 
 
 class ProjectWindow(QMainWindow):

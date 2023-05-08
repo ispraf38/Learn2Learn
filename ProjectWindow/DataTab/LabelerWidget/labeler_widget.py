@@ -10,8 +10,8 @@ from PyQt6.QtWidgets import *
 from loguru import logger
 
 from ProjectWindow.utils import WidgetWithMenu, MenuContainer, MenuWidget, Config
-from ProjectWindow.DataWidget.data_handler import JsonHandler
-from ProjectWindow.DataWidget.LabelerWidget.utils import Label
+from ProjectWindow.DataTab.data_handler import JsonHandler
+from ProjectWindow.DataTab.LabelerWidget.utils import Label
 
 
 class LabelWidget(QLabel):

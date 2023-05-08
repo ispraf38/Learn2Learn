@@ -7,6 +7,19 @@ from typing import Tuple
 from functools import partial
 
 
+def get_params_from_widget(widget: QWidget):
+    if isinstance(widget, (QDoubleSpinBox, QSpinBox)):
+        return widget.value()
+    elif isinstance(widget, QCheckBox):
+        return widget.isChecked()
+    elif isinstance(widget, (RangeSpinbox, FixedMultiSpinbox, MultiSpinBox)):
+        return widget.get_value()
+    elif isinstance(widget, QComboBox):
+        return widget.currentText()
+    else:
+        raise TypeError(f'Unknown type: {type(widget)}')
+
+
 class MultiSpinBox(QWidget):
     value_changed = pyqtSignal()
 

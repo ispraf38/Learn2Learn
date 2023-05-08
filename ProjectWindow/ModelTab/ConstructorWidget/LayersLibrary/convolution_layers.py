@@ -2,7 +2,7 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
-from ProjectWindow.ModelWidget.ConstructorWidget.LayersLibrary.base_layer import Layer, LayerMenu
+from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.base_layer import Layer, LayerMenu
 from ProjectWindow.utils import MenuContainer, Config
 from utils import MultiSpinBox
 

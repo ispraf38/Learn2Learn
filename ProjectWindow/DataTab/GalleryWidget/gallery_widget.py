@@ -3,7 +3,7 @@ from PyQt6.QtGui import *
 from PyQt6.QtCore import *
 
 from ProjectWindow.utils import WidgetWithMenu, MenuContainer, Config, MenuWidget
-from ProjectWindow.DataWidget.data_handler import JsonHandler
+from ProjectWindow.DataTab.data_handler import JsonHandler
 
 import os
 
