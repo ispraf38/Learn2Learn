@@ -5,5 +5,22 @@
     "project_config_name": "config.json",
     "project_data_default_path": "D:\\Diplom\\projects\\<project_name>\\Data",
     "data_json_default_name": "markup_info.json",
-    "prehandle_default_test_image": "test.jpg"
+    "prehandle_default_test_image": "test.jpg",
+    "parameter_widgets": {
+        "batch_size": {
+            "label_text": "Размер батча",
+            "widget": "SpinBox",
+            "max": 10000,
+            "min": 1
+        },
+        "val_frac": {
+            "label_text": "Процент валидационной выборки",
+            "widget": "DoubleSpinBox",
+            "single_step": 0.05,
+            "max": 1,
+            "decimals": 2
+        }
+    },
+    "batch_size": 32,
+    "val_vrac": 0.2
 }

@@ -33,6 +33,7 @@ class MainWidget(WidgetWithTabs):
         self.data.prehandle.save_button.clicked.connect(self.set_input_layer_dataloader)
 
     def set_input_layer_dataloader(self):
+        self.model.constructor.input_layer.state = 'not_checked'
         self.data.reset_dataloader()
         self.model.constructor.input_layer.set_dataloader(self.data.train_dataloader, self.data.val_dataloader)
 

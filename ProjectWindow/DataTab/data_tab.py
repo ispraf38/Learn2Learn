@@ -45,8 +45,8 @@ class DataTab(WidgetWithTabs):
         self.prehandle.gen_transform()
         dataset = self.main_widget.model_type.dataset_type(self.config, transform=self.prehandle.transform)
         train_ind, val_ind = train_test_split(range(len(dataset)),
-                                                    test_size=self.main_widget.val_frac.value(),
+                                                    test_size=self.config.val_frac,
                                                     shuffle=True)
-        self.train_dataloader = DataLoader(Subset(dataset, train_ind), batch_size=self.main_widget.batch_size.value(),
-                                           shuffle= True)
-        self.val_dataloader = DataLoader(Subset(dataset, val_ind), batch_size=self.main_widget.batch_size.value())
+        self.train_dataloader = DataLoader(Subset(dataset, train_ind), batch_size=self.config.batch_size,
+                                           shuffle=True)
+        self.val_dataloader = DataLoader(Subset(dataset, val_ind), batch_size=self.config.batch_size)

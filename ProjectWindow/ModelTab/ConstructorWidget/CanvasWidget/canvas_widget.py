@@ -64,6 +64,7 @@ class Canvas(QLabel):
                 self.arrows.remove(existing_arrow)
             current_arrow = (self.new_arrow, (layer, button))
             layer.previous_layers[button] = self.new_arrow
+            self.new_arrow[0].next_layers[self.new_arrow[1]] = (layer, button)
             self.arrows.append(current_arrow)
             self.new_arrow = None
             self.current_arrow = current_arrow
@@ -80,23 +81,21 @@ class Canvas(QLabel):
     def delete_connection(self, arrow: Tuple[Tuple[Layer, str], Tuple[Layer, str]]):
         if arrow in self.arrows:
             self.arrows.remove(arrow)
-            arrow[1][0].previous_layers = None
+            arrow[1][0].previous_layers[arrow[0][1]] = (None, None)
+            arrow[0][0].next_layers[arrow[1][1]] = (None, None)
         else:
             logger.error(f'There are no {arrow} connection')
 
     def set_current_layer(self, layer: Layer):
-        logger.debug(f'Set current layer {layer}')
         self.current_layer = layer
 
     def delete_current_layer(self):
-        print(self.arrows)
         if self.current_layer is not None:
             if self.current_arrow is not None and self.current_layer in self.current_arrow:
                 self.delete_current_connection()
             arrows_to_delete = []
             for arrow in self.arrows:
-                logger.debug(f'{self.current_layer} in {arrow}: {self.current_layer in arrow}')
-                if self.current_layer in arrow:
+                if self.current_layer in (arrow[0][0], arrow[1][0]):
                     arrows_to_delete.append(arrow)
             for arrow in arrows_to_delete:
                 self.delete_connection(arrow)

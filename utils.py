@@ -20,6 +20,19 @@ def get_params_from_widget(widget: QWidget):
         raise TypeError(f'Unknown type: {type(widget)}')
 
 
+def get_signal_from_widget(widget: QWidget) -> pyqtSignal:
+    if isinstance(widget, (QDoubleSpinBox, QSpinBox)):
+        return widget.valueChanged
+    elif isinstance(widget, QCheckBox):
+        return widget.stateChanged
+    elif isinstance(widget, (RangeSpinbox, FixedMultiSpinbox, MultiSpinBox)):
+        return widget.value_changed
+    elif isinstance(widget, QComboBox):
+        return widget.currentTextChanged
+    else:
+        raise TypeError(f'Unknown type: {type(widget)}')
+
+
 class MultiSpinBox(QWidget):
     value_changed = pyqtSignal()
 
@@ -158,7 +171,7 @@ class RangeSpinbox(QWidget):
         self.right_spinbox.setValue(values[1])
 
     def get_value(self):
-        return (self.left_spinbox.value(), self.right_spinbox.value())
+        return self.left_spinbox.value(), self.right_spinbox.value()
 
     def check_value(self, left: bool = True):
         if self.left_spinbox.value() > self.right_spinbox.value():

@@ -57,7 +57,6 @@ class MenuContainer(QWidget):
         self.setMinimumWidth(200)
 
     def set_menu(self, menu: MenuWidget):
-        logger.debug(f'Setting menu {menu}')
         self.layout_.addWidget(menu)
         self.layout_.setCurrentWidget(menu)
 

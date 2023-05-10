@@ -27,12 +27,9 @@ class Model(nn.Module):
             self.layers[layer]['handled'] = True
             self.layers[layer]['outputs'] = output
             for l in layers:
-                logger.debug(l)
-                logger.debug(l.previous_layers)
                 if not self.layers[l]['handled']:
                     previous_handled = True
                     for p_l, _ in l.previous_layers.values():
-                        logger.debug(p_l)
                         if p_l is not None:
                             previous_handled = previous_handled and\
                                                self.layers[p_l]['handled'] and p_l.state.state == 'ok'

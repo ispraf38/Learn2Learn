@@ -4,10 +4,11 @@ from PyQt6.QtWidgets import *
 
 from ProjectWindow.utils import Config, MenuWidget, WidgetWithMenu, MenuContainer
 from ProjectWindow.movable_widget import MovableWidget
-from utils import get_params_from_widget
+from utils import get_params_from_widget, get_signal_from_widget
 
 from typing import Type, List, Optional, Dict, Tuple, Any
 from loguru import logger
+import torch
 from torch.nn import Module
 from torch.utils.data import DataLoader
 
@@ -61,16 +62,26 @@ class LayerState:
 
 
 class LayerMenu(MenuWidget):
+    param_changed = pyqtSignal()
+
     def __init__(self, config: Config, name: str):
         super(LayerMenu, self).__init__(config)
         self.setLayout(QVBoxLayout())
         label = QLabel(f'{name}\n{self.description}\nПараметры:')
         label.setAlignment(Qt.AlignmentFlag.AlignTop)
         label.setMaximumHeight(120)
+        self.layout().addWidget(label)
+
         self.params = {}
         self.parameters()
-        self.layout().addWidget(label)
         self.layout().addWidget(self.build_parameters_widget())
+
+        self.in_info = QWidget()
+        self.in_info.setLayout(QStackedLayout())
+        self.out_info = QWidget()
+        self.out_info.setLayout(QStackedLayout())
+        self.layout().addWidget(self.in_info)
+        self.layout().addWidget(self.out_info)
 
     @property
     def description(self):
@@ -84,9 +95,48 @@ class LayerMenu(MenuWidget):
         for n, (name, widget) in enumerate(self.params.items()):
             layout.addWidget(QLabel(name), n, 0)
             layout.addWidget(widget, n, 1)
+            get_signal_from_widget(widget).connect(self.param_changed.emit)
         widget = QWidget()
         widget.setLayout(layout)
         return widget
+
+    def set_in_info(self, inputs: Dict[str, Any]):
+        if self.in_info.layout().currentWidget() is not None:
+            self.in_info.layout().currentWidget().close()
+        layout = QGridLayout()
+        layout.addWidget(QLabel('Inputs:'), 0, 0)
+        for n, (k, v) in enumerate(inputs.items()):
+            layout.addWidget(QLabel(k), n + 1, 1)
+            if v is None:
+                widget = (QLabel('None'))
+            elif isinstance(v, torch.Tensor):
+                widget = QLabel(f'Тензор размерности {v.shape}')
+            else:
+                widget = QLabel('Неизвестный тип данных')
+            layout.addWidget(widget, n + 1, 2)
+        widget = QWidget()
+        widget.setLayout(layout)
+        self.in_info.layout().addWidget(widget)
+        self.in_info.layout().setCurrentWidget(widget)
+
+    def set_out_info(self, outputs: Dict[str, Any]):
+        if self.out_info.layout().currentWidget() is not None:
+            self.out_info.layout().currentWidget().close()
+        layout = QGridLayout()
+        layout.addWidget(QLabel('Outputs:'), 0, 0)
+        for n, (k, v) in enumerate(outputs.items()):
+            layout.addWidget(QLabel(k), n + 1, 1)
+            if v is None:
+                widget = (QLabel('None'))
+            elif isinstance(v, torch.Tensor):
+                widget = QLabel(f'Тензор размерности {v.shape}')
+            else:
+                widget = QLabel('Неизвестный тип данных')
+            layout.addWidget(widget, n + 1, 2)
+        widget = QWidget()
+        widget.setLayout(layout)
+        self.out_info.layout().addWidget(widget)
+        self.out_info.layout().setCurrentWidget(widget)
 
 
 class LayerButton(QPushButton):
@@ -141,9 +191,11 @@ class Layer(MovableWidget):
         self.color = color
         self.module = module
         self.F = None
-        self.current_output = None
+        self.current_output = {i: None for i in self.outputs}
+        self.current_input = {i: None for i in self.inputs}
         self.state = LayerState()
-        self.previous_layers = {i: (None, None) for i in self.inputs}
+        self.previous_layers: Dict[str, Tuple[Optional[Layer], Optional[str]]] = {i: (None, None) for i in self.inputs}
+        self.next_layers: Dict[str, Tuple[Optional[Layer], Optional[str]]] = {i: (None, None) for i in self.outputs}
 
         self.name = QLabel(f'{name}_{id}')
         metrics = QFontMetrics(self.name.font())
@@ -197,6 +249,11 @@ class Layer(MovableWidget):
         in_buttons_widget.setFixedHeight((self.height() - self.name.height()) // 2)
         out_buttons_widget.setFixedHeight((self.height() - self.name.height()) // 2)
         self.childWidget.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
+        self.menu.param_changed.connect(self.set_not_checked)
+
+    def set_not_checked(self):
+        self.state.state = 'not_checked'
+        self.update()
 
     def get_params(self):
         params = {}
@@ -208,7 +265,6 @@ class Layer(MovableWidget):
         return self.name.text()
 
     def activate_menu(self):
-        logger.debug(f'activate menu {self.menu}')
         self.menu_container.set_menu(self.menu)
 
     def paintEvent(self, e: QPaintEvent):
@@ -242,6 +298,13 @@ class Layer(MovableWidget):
             logger.success(f'Compilation succeeded: {self}')
             return True
 
+    def update_in_out_menu(self):
+        self.menu.set_out_info(self.current_output)
+        for (o, (l, i)) in self.next_layers.items():
+            if l is not None:
+                l.current_input[i] = self.current_output[o]
+                l.menu.set_in_info(l.current_input)
+
     def forward_test(self, x) -> Tuple[Dict[str, Any], bool]:
         try:
             out = self.F(x['in'])
@@ -255,6 +318,7 @@ class Layer(MovableWidget):
             self.state.ok()
             self.update()
             self.current_output = {'out': out}
+            self.update_in_out_menu()
             logger.success(f'Forward test succeeded: {self}')
             return self.current_output, True
 
@@ -321,6 +385,7 @@ class InputLayer(Layer):
             self.state.ok()
             self.update()
             self.current_output = {'out': out[0]}
+            self.update_in_out_menu()
             logger.success(f'Forward test succeeded: {self}')
             return self.current_output, True
 
@@ -345,5 +410,6 @@ class OutputLayer(Layer):
         self.state.ok()
         self.update()
         self.current_output = {}
+        self.update_in_out_menu()
         logger.success(f'Forward test succeeded: {self}')
         return self.current_output, True

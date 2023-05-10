@@ -11,6 +11,7 @@ from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.convolution_layers i
 from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.dropout_layers import *
 from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.linear_layers import *
 from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.utility_layers import *
+from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.totype_layers import *
 from ProjectWindow.ModelTab.ConstructorWidget.model import Model
 
 from loguru import logger
@@ -36,7 +37,8 @@ BUTTONS = {
             'Linear': LinearLayer
         },
         'Utility layers': {
-            'Flatten': FlattenLayer
+            'Flatten': FlattenLayer,
+            'ToType': ToTypeLayer
         }
     },
     'Удалить выбранный слой': 'delete layer',
@@ -148,6 +150,7 @@ class ConstructorWidget(WidgetWithMenu):
         self.menu.main_menu.delete_connection.clicked.connect(self.canvas_.delete_current_connection)
         self.menu.main_menu.delete_layer.clicked.connect(self.canvas_.delete_current_layer)
         self.menu.main_menu.compile.clicked.connect(self.compile)
+        self.menu.main_menu.test.clicked.connect(self.test)
 
         self.layers_seq = []
 
@@ -166,11 +169,12 @@ class ConstructorWidget(WidgetWithMenu):
     def compile(self):
         ok = True
         for layer in self.canvas_.layers:
-            ok = layer.compile() and ok
+            if layer.state.state not in ['compiled', 'ok']:
+                ok = layer.compile() and ok
         if ok:
-            self.model = Model(self.canvas_.layers, self.input_layer, self.output_layer)
+            logger.success('Compilation succeeded')
         else:
             logger.error('Compilation failed')
 
     def test(self):
-        pass
+        self.model = Model(self.canvas_.layers, self.input_layer, self.output_layer)

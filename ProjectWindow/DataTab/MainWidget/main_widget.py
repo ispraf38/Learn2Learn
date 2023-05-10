@@ -26,6 +26,7 @@ class DataMainWidget(WidgetWithMenu):
         self.batch_size = QSpinBox()
         self.batch_size.setMaximum(10000)
         self.batch_size.setMinimum(1)
+        self.batch_size.setValue(32)
 
         self.layout().addWidget(batch_size_text, 1, 0)
         self.layout().addWidget(self.batch_size, 1, 1)
