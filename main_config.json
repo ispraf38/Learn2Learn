@@ -4,8 +4,10 @@
     "projects_path": "D:\\Diplom\\projects",
     "project_config_name": "config.json",
     "project_data_default_path": "D:\\Diplom\\projects\\<project_name>\\Data",
+    "project_models_default_path": "D:\\Diplom\\projects\\<project_name>\\Models",
     "data_json_default_name": "markup_info.json",
     "prehandle_default_test_image": "test.jpg",
+    "current_model_file": "current_model.json",
     "parameter_widgets": {
         "batch_size": {
             "label_text": "Размер батча",

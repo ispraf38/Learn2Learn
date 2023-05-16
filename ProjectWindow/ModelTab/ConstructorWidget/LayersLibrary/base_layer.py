@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import *
 
 from ProjectWindow.utils import Config, MenuWidget, WidgetWithMenu, MenuContainer
 from ProjectWindow.movable_widget import MovableWidget
-from utils import get_params_from_widget, get_signal_from_widget
+from utils import get_params_from_widget, get_signal_from_widget, set_widget_param
 
 from typing import Type, List, Optional, Dict, Tuple, Any
 from loguru import logger
@@ -185,8 +185,10 @@ class Layer(MovableWidget):
         self.inputs = in_buttons
         self.outputs = out_buttons
 
+        self.type_name = name
+        self.id = id
         self.config = config
-        self.menu = menu(config, f'{name}_{id}')
+        self.menu = menu(config, self.full_name)
         self.menu_container = menu_container
         self.color = color
         self.module = module
@@ -195,11 +197,11 @@ class Layer(MovableWidget):
         self.current_input = {i: None for i in self.inputs}
         self.state = LayerState()
         self.previous_layers: Dict[str, Tuple[Optional[Layer], Optional[str]]] = {i: (None, None) for i in self.inputs}
-        self.next_layers: Dict[str, Tuple[Optional[Layer], Optional[str]]] = {i: (None, None) for i in self.outputs}
+        self.next_layers: Dict[str, List[Tuple[Optional[Layer], Optional[str]]]] = {i: [] for i in self.outputs}
 
-        self.name = QLabel(f'{name}_{id}')
+        self.name = QLabel(self.full_name)
         metrics = QFontMetrics(self.name.font())
-        bounding_rect = metrics.boundingRect(f'{name}_{id}')
+        bounding_rect = metrics.boundingRect(self.full_name)
         self.name.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.name.setStyleSheet('padding: 0px')
         self.name.setFixedHeight(bounding_rect.height() + 10)
@@ -251,15 +253,16 @@ class Layer(MovableWidget):
         self.childWidget.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
         self.menu.param_changed.connect(self.set_not_checked)
 
+    @property
+    def full_name(self):
+        return f'{self.type_name}_{self.id}'
+
     def set_not_checked(self):
-        self.state.state = 'not_checked'
+        self.state.not_checked()
         self.update()
 
     def get_params(self):
-        params = {}
-        for k, v in self.menu.params.items():
-            params[k] = get_params_from_widget(v)
-        return params
+        return {k: get_params_from_widget(v) for k, v in self.menu.params.items()}
 
     def __str__(self):
         return self.name.text()
@@ -300,14 +303,15 @@ class Layer(MovableWidget):
 
     def update_in_out_menu(self):
         self.menu.set_out_info(self.current_output)
-        for (o, (l, i)) in self.next_layers.items():
-            if l is not None:
-                l.current_input[i] = self.current_output[o]
-                l.menu.set_in_info(l.current_input)
+        for o, next_layers in self.next_layers.items():
+            for l, i in next_layers:
+                if l is not None:
+                    l.current_input[i] = self.current_output[o]
+                    l.menu.set_in_info(l.current_input)
 
     def forward_test(self, x) -> Tuple[Dict[str, Any], bool]:
         try:
-            out = self.F(x['in'])
+            out = self.forward(x)
         except Exception as e:
             logger.error(e)
             self.state.error()
@@ -321,6 +325,27 @@ class Layer(MovableWidget):
             self.update_in_out_menu()
             logger.success(f'Forward test succeeded: {self}')
             return self.current_output, True
+
+    def forward(self, x):
+        return self.F(x['in'])
+
+    def get_dict(self):
+        return self.full_name, {
+            'pos': (self.pos().x(), self.pos().y()),
+            'params_values': {
+                k: v for k, v in self.get_params().items()
+            },
+            'next_layers': {
+                k: [(l.full_name, b) for l, b in v] for k, v in self.next_layers.items()
+            },
+            'previous_layers': {
+                k: (v[0].full_name if v[0] is not None else None, v[1]) for k, v in self.previous_layers.items()
+            }
+        }
+
+    def load_params_values(self, d):
+        for k, v in d.items():
+            set_widget_param(self.menu.params[k], v)
 
 
 class InputLayerMenu(LayerMenu):
@@ -343,7 +368,7 @@ class InputLayer(Layer):
                  id: int,
                  pos: QPoint = QPoint(10, 10)):
         super(InputLayer, self).__init__(menu_container, config, parent, id, Module, InputLayerMenu, pos,
-                                         name='Input layer', in_buttons=[])
+                                         name='InputLayer', in_buttons=[])
         self.train_dataloader = None
         self.val_dataloader = None
 
@@ -398,7 +423,7 @@ class OutputLayer(Layer):
                  id: int,
                  pos: QPoint = QPoint(10, 10)):
         super(OutputLayer, self).__init__(menu_container, config, parent, id, Module, OutputLayerMenu, pos,
-                                          name='Output layer', out_buttons=[])
+                                          name='OutputLayer', out_buttons=[])
 
     def compile(self) -> bool:
         self.state.compiled()

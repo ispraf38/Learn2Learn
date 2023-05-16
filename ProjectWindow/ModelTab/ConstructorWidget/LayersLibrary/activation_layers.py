@@ -9,6 +9,7 @@ import torch.nn as nn
 
 
 class ReLUMenu(LayerMenu):
+    @property
     def description(self):
         return 'Поэлементный максимум от элемента и нуля'
 
@@ -25,6 +26,7 @@ class ReLULayer(Layer):
 
 
 class SigmoidMenu(LayerMenu):
+    @property
     def description(self):
         return 'Поэлементный максимум от элемента и нуля'
 

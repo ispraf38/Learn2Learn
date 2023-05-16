@@ -12,8 +12,10 @@ import torch.nn as nn
 class Conv1dMenu(LayerMenu):
     def parameters(self):
         in_channels = QSpinBox()
+        in_channels.setMaximum(100000)
 
         out_channels = QSpinBox()
+        out_channels.setMaximum(100000)
 
         kernel_size = MultiSpinBox()
 
@@ -48,6 +50,7 @@ class Conv1dMenu(LayerMenu):
             'bias': bias
         }
 
+    @property
     def description(self):
         return 'Применяет одномерную свертку ко входным данным'
 
@@ -66,8 +69,10 @@ class Conv1dLayer(Layer):
 class Conv2dMenu(LayerMenu):
     def parameters(self):
         in_channels = QSpinBox()
+        in_channels.setMaximum(100000)
 
         out_channels = QSpinBox()
+        out_channels.setMaximum(100000)
 
         kernel_size = MultiSpinBox()
 
@@ -102,6 +107,7 @@ class Conv2dMenu(LayerMenu):
             'bias': bias
         }
 
+    @property
     def description(self):
         return 'Применяет двумерную свертку ко входным данным'
 

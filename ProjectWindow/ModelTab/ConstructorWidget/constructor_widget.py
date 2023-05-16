@@ -7,16 +7,41 @@ from ProjectWindow.utils import Config, MenuWidget, WidgetWithMenu, MenuContaine
 from ProjectWindow.ModelTab.ConstructorWidget.CanvasWidget.canvas_widget import CanvasWidget
 from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.base_layer import Layer, InputLayer, OutputLayer
 from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.activation_layers import *
+from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.constant_layers import *
 from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.convolution_layers import *
 from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.dropout_layers import *
 from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.linear_layers import *
-from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.utility_layers import *
+from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.pooling_layers import *
 from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.totype_layers import *
+from ProjectWindow.ModelTab.ConstructorWidget.LayersLibrary.utility_layers import *
 from ProjectWindow.ModelTab.ConstructorWidget.model import Model
 
 from loguru import logger
 from typing import Type, Dict, Union, Optional, Tuple
 from functools import partial
+import json
+import os
+
+LAYERS = {
+    'InputLayer': InputLayer,
+    'OutputLayer': OutputLayer,
+    'ReLU': ReLULayer,
+    'Sigmoid': SigmoidLayer,
+    'Conv1d': Conv1dLayer,
+    'Conv2d': Conv2dLayer,
+    'Dropout': DropoutLayer,
+    'Identity': IdentityLayer,
+    'Linear': LinearLayer,
+    'MaxPool2d': MaxPool2dLayer,
+    'Flatten': FlattenLayer,
+    'ToType': ToTypeLayer,
+    'Sum': SumLayer,
+    'Prod': ProdLayer,
+    'Eye': EyeLayer,
+    'Unsqueeze': UnsqueezeLayer,
+    'Cat': CatLayer,
+    'Repeat': RepeatLayer
+}
 
 
 BUTTONS = {
@@ -29,6 +54,9 @@ BUTTONS = {
             'Conv1d': Conv1dLayer,
             'Conv2d': Conv2dLayer
         },
+        'Constant layers': {
+            'Eye': EyeLayer
+        },
         'Dropout layers': {
             'Dropout': DropoutLayer
         },
@@ -36,28 +64,38 @@ BUTTONS = {
             'Identity': IdentityLayer,
             'Linear': LinearLayer
         },
+        'Pooling layers': {
+            'MaxPool2d': MaxPool2dLayer
+        },
         'Utility layers': {
             'Flatten': FlattenLayer,
-            'ToType': ToTypeLayer
+            'ToType': ToTypeLayer,
+            'Sum': SumLayer,
+            'Prod': ProdLayer,
+            'Unsqueeze': UnsqueezeLayer,
+            'Cat': CatLayer,
+            'Repeat': RepeatLayer
         }
     },
     'Удалить выбранный слой': 'delete layer',
     'Удалить выбранную связь': 'delete connection',
     'Сохранить параметры': 'compile',
-    'Тестовый запуск': 'test'
+    'Тестовый запуск': 'test',
+    'Сохранить': 'save'
 }
 
 
-class MainCounstructorMenu(QWidget):
+class MainConstructorMenu(QWidget):
     create_layer = pyqtSignal(type(Layer))
 
     def __init__(self):
-        super(MainCounstructorMenu, self).__init__()
+        super(MainConstructorMenu, self).__init__()
         self.setLayout(QStackedLayout())
         self.delete_layer = None
         self.delete_connection = None
         self.compile = None
         self.test = None
+        self.save = None
         self.layouts = {}
         self.buttons = {}
         self.add_layout(BUTTONS, 'main')
@@ -84,6 +122,8 @@ class MainCounstructorMenu(QWidget):
                     self.compile = button
                 elif v == 'test':
                     self.test = button
+                elif v == 'save':
+                    self.save = button
             else:
                 button.clicked.connect(partial(self.create_layer.emit, v))
             layout.addWidget(button)
@@ -112,7 +152,7 @@ class MainCounstructorMenu(QWidget):
 class ConstructorMenu(MenuWidget):
     def __init__(self, config: Config):
         super(ConstructorMenu, self).__init__(config)
-        self.main_menu = MainCounstructorMenu()
+        self.main_menu = MainConstructorMenu()
 
         self.layer_menu_container = MenuContainer()
 
@@ -151,11 +191,18 @@ class ConstructorWidget(WidgetWithMenu):
         self.menu.main_menu.delete_layer.clicked.connect(self.canvas_.delete_current_layer)
         self.menu.main_menu.compile.clicked.connect(self.compile)
         self.menu.main_menu.test.clicked.connect(self.test)
+        self.menu.main_menu.save.clicked.connect(self.save_model)
 
         self.layers_seq = []
 
-    def create_layer(self, layer: Type[Layer]):
-        layer = layer(self.menu.layer_menu_container, self.config, self.canvas_, self.id)
+        self.load_model()
+
+    def create_layer(self, layer: Type[Layer], **kwargs):
+        if 'id' not in kwargs:
+            kwargs['id'] = self.id
+        else:
+            self.id = max(self.id, kwargs['id'])
+        layer = layer(self.menu.layer_menu_container, self.config, self.canvas_, **kwargs)
         layer.in_click.connect(lambda x: self.canvas_.in_button_clicked(layer, x))
         layer.out_click.connect(lambda x: self.canvas_.out_button_clicked(layer, x))
         layer.newGeometry.connect(lambda x: self.canvas_.update_arrows())
@@ -165,6 +212,7 @@ class ConstructorWidget(WidgetWithMenu):
         # self.canvas_.set_current_layer(layer)
         self.canvas.update()
         logger.info(f'Created layer {layer}')
+        return layer
 
     def compile(self):
         ok = True
@@ -178,3 +226,40 @@ class ConstructorWidget(WidgetWithMenu):
 
     def test(self):
         self.model = Model(self.canvas_.layers, self.input_layer, self.output_layer)
+
+    def save_model(self):
+        data = {}
+        for layer in self.canvas_.layers:
+            name, descr = layer.get_dict()
+            data[name] = descr
+        with open(self.config.current_model_file, 'w+', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+
+    def load_model(self):
+        if os.path.exists(self.config.current_model_file):
+            with open(self.config.current_model_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            created_layers = {}
+            for name, descr in data.items():
+                temp = name.split('_')
+                id = int(temp[-1])
+                type = '_'.join(temp[:-1])
+                layer = self.create_layer(LAYERS[type], id=id, pos=QPoint(*descr['pos']))
+                created_layers[name] = layer
+                layer.load_params_values(descr['params_values'])
+                if type == 'InputLayer':
+                    self.input_layer.close()
+                    self.canvas_.layers.remove(self.input_layer)
+                    self.input_layer = layer
+                if type == 'OutputLayer':
+                    self.output_layer.close()
+                    self.canvas_.layers.remove(self.output_layer)
+                    self.output_layer = layer
+                for o, next_layer in descr['next_layers'].items():
+                    for l, i in next_layer:
+                        if l in created_layers:
+                            self.canvas_.create_connection(layer, o, created_layers[l], i)
+                for i, (l, o) in descr['previous_layers'].items():
+                    if l in created_layers:
+                        self.canvas_.create_connection(created_layers[l], o, layer, i)
+            self.canvas_.update_arrows()

@@ -10,6 +10,7 @@ import torch.nn as nn
 
 
 class DropoutMenu(LayerMenu):
+    @property
     def description(self):
         return 'Во время обучения зануляет случайные элементы входа'
 

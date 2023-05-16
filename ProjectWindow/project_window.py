@@ -33,7 +33,7 @@ class MainWidget(WidgetWithTabs):
         self.data.prehandle.save_button.clicked.connect(self.set_input_layer_dataloader)
 
     def set_input_layer_dataloader(self):
-        self.model.constructor.input_layer.state = 'not_checked'
+        self.model.constructor.input_layer.state.not_checked()
         self.data.reset_dataloader()
         self.model.constructor.input_layer.set_dataloader(self.data.train_dataloader, self.data.val_dataloader)
 
@@ -65,13 +65,24 @@ class ProjectWindow(QMainWindow):
         if not hasattr(self.config, 'data_path'):
             self.config.data_path = self.main_config.project_data_default_path.replace('<project_name>',
                                                                                        self.config.project_name)
+            if not os.path.exists(self.config.data_path):
+                os.mkdir(self.config.data_path)
 
-        if not os.path.exists(self.config.data_path):
-            os.mkdir(self.config.data_path)
+        if not hasattr(self.config, 'models_path'):
+            self.config.models_path = self.main_config.project_models_default_path.replace('<project_name>',
+                                                                                       self.config.project_name)
+            if not os.path.exists(self.config.models_path):
+                os.mkdir(self.config.models_path)
 
         if not hasattr(self.config, 'json_path'):
             self.config.json_path = os.path.join(self.config.data_path, self.main_config.data_json_default_name)
 
+        if not hasattr(self.config, 'current_model_file'):
+            self.config.current_model_file = os.path.join(self.config.models_path, self.main_config.current_model_file)
+
+        for atr in ['parameter_widgets', 'batch_size', 'val_frac']:
+            if not hasattr(self.config, atr):
+                self.config.__setattr__(atr, self.main_config.__getattribute__(atr))
 
 
 

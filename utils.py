@@ -3,7 +3,7 @@ from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
 from loguru import logger
-from typing import Tuple
+from typing import Tuple, Any
 from functools import partial
 
 
@@ -29,6 +29,19 @@ def get_signal_from_widget(widget: QWidget) -> pyqtSignal:
         return widget.value_changed
     elif isinstance(widget, QComboBox):
         return widget.currentTextChanged
+    else:
+        raise TypeError(f'Unknown type: {type(widget)}')
+
+
+def set_widget_param(widget: QWidget, value: Any):
+    if isinstance(widget, (QDoubleSpinBox, QSpinBox)):
+        widget.setValue(value)
+    elif isinstance(widget, QCheckBox):
+        widget.setChecked(value)
+    elif isinstance(widget, (RangeSpinbox, FixedMultiSpinbox, MultiSpinBox)):
+        widget.set_value(value)
+    elif isinstance(widget, QComboBox):
+        widget.setCurrentText(value)
     else:
         raise TypeError(f'Unknown type: {type(widget)}')
 

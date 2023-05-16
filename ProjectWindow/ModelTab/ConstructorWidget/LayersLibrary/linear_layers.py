@@ -25,6 +25,7 @@ class IdentityLayer(Layer):
 
 
 class LinearMenu(LayerMenu):
+    @property
     def description(self):
         return 'Применяет линейное преобразование ко входныи данным'
 

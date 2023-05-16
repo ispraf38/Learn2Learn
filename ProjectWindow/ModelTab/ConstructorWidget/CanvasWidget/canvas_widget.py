@@ -25,7 +25,6 @@ class Canvas(QLabel):
 
         self.setPixmap(self.pixmap)
         self.layers = []
-        self.arrows = []
         self.new_arrow = None
         self.current_arrow = None
         self.current_layer = None
@@ -40,35 +39,39 @@ class Canvas(QLabel):
         painter = QPainter(pixmap)
         pen = QPen()
         pen.setWidth(3)
-        for ((l1, b1), (l2, b2)) in self.arrows:
-            p1 = QPoint(l1.pos().x() + l1.out_buttons[b1].pos().x() + l1.out_buttons[b1].width() // 2,
-                        l1.pos().y() + l1.height())
-            p2 = QPoint(l2.pos().x() + l2.in_buttons[b2].pos().x() + l2.in_buttons[b2].width() // 2,
-                        l2.pos().y() + l2.in_buttons[b2].pos().y())
-            color = QColor(0, 0, 0) if ((l1, b1), (l2, b2)) != self.current_arrow else QColor(0, 0, 255)
-            pen.setColor(color)
-            painter.setPen(pen)
-            painter.drawLine(p1, p2)
+        for layer in self.layers:
+            for o, next_layers in layer.next_layers.items():
+                for l, i in next_layers:
+                    if l is not None:
+                        p1 = QPoint(
+                            layer.pos().x() + layer.out_buttons[o].pos().x() + layer.out_buttons[o].width() // 2,
+                            layer.pos().y() + layer.height())
+                        p2 = QPoint(
+                            l.pos().x() + l.in_buttons[i].pos().x() + l.in_buttons[i].width() // 2,
+                            l.pos().y() + l.in_buttons[i].pos().y())
+                        color = QColor(0, 0, 0) if ((layer, o), (l, i)) != self.current_arrow else QColor(0, 0, 255)
+                        pen.setColor(color)
+                        painter.setPen(pen)
+                        painter.drawLine(p1, p2)
         painter.end()
         self.setPixmap(pixmap)
 
     def in_button_clicked(self, layer: Layer, button: str):
-        existing_arrow = None
-        for arrow in self.arrows:
-            if arrow[1] == (layer, button):
-                existing_arrow = arrow
+        existing_arrow = (layer.previous_layers[button], (layer, button))
         if self.new_arrow is None:
             self.current_arrow = existing_arrow
         else:
-            if existing_arrow is not None:
-                self.arrows.remove(existing_arrow)
-            current_arrow = (self.new_arrow, (layer, button))
-            layer.previous_layers[button] = self.new_arrow
-            self.new_arrow[0].next_layers[self.new_arrow[1]] = (layer, button)
-            self.arrows.append(current_arrow)
+            if existing_arrow[0][0] is not None:
+                self.delete_connection(existing_arrow)
+            self.create_connection(self.new_arrow[0], self.new_arrow[1], layer, button)
             self.new_arrow = None
-            self.current_arrow = current_arrow
         self.update_arrows()
+
+    def create_connection(self, layer1: Layer, button1: str, layer2: Layer, button2: str):
+        arrow = ((layer1, button1), (layer2, button2))
+        layer1.next_layers[button1].append(arrow[1])
+        layer2.previous_layers[button2] = arrow[0]
+        self.current_arrow = arrow
 
     def out_button_clicked(self, layer: Layer, button: str):
         self.new_arrow = (layer, button)
@@ -79,26 +82,21 @@ class Canvas(QLabel):
         self.update_arrows()
 
     def delete_connection(self, arrow: Tuple[Tuple[Layer, str], Tuple[Layer, str]]):
-        if arrow in self.arrows:
-            self.arrows.remove(arrow)
-            arrow[1][0].previous_layers[arrow[0][1]] = (None, None)
-            arrow[0][0].next_layers[arrow[1][1]] = (None, None)
-        else:
-            logger.error(f'There are no {arrow} connection')
+        arrow[1][0].previous_layers[arrow[1][1]] = (None, None)
+        arrow[0][0].next_layers[arrow[0][1]].remove(arrow[1])
 
     def set_current_layer(self, layer: Layer):
         self.current_layer = layer
 
     def delete_current_layer(self):
         if self.current_layer is not None:
-            if self.current_arrow is not None and self.current_layer in self.current_arrow:
-                self.delete_current_connection()
-            arrows_to_delete = []
-            for arrow in self.arrows:
-                if self.current_layer in (arrow[0][0], arrow[1][0]):
-                    arrows_to_delete.append(arrow)
-            for arrow in arrows_to_delete:
-                self.delete_connection(arrow)
+            for i, (l, o) in self.current_layer.previous_layers.items():
+                if l is not None:
+                    self.delete_connection(((l, o), (self.current_layer, i)))
+            for o, next_layers in self.current_layer.next_layers.items():
+                for l, i in next_layers:
+                    if l is not None:
+                        self.delete_connection(((self.current_layer, o), (l, i)))
             self.layers.remove(self.current_layer)
             self.current_layer.close()
             self.current_layer = None
