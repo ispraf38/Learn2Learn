@@ -20,14 +20,22 @@ class Model(nn.Module):
             } for layer in layers
         }
         self.layers_order = []
-        layers_to_run = [self.input_layer]
+        label = None
+        layers_to_run = [self.input_layer] + [layer for layer in layers if layer.previous_layers == {}]
         while layers_to_run:
             layer = layers_to_run.pop(0)
+            logger.debug(layer)
             if layer not in [self.input_layer, self.output_layer]:
                 self.layers_order.append(layer)
-            logger.debug(layer)
-            output, ok = layer.forward_test({i: self.layers[l]['outputs'][o]
-                                             for (i, (l, o)) in layer.previous_layers.items()})
+                output, ok = layer.forward_test({i: self.layers[l]['outputs'][o]
+                                                 for (i, (l, o)) in layer.previous_layers.items()})
+            elif layer == self.input_layer:
+                output, ok = layer.forward_test({i: self.layers[l]['outputs'][o]
+                                                 for (i, (l, o)) in layer.previous_layers.items()})
+                label = layer.current_label
+            elif layer == self.output_layer:
+                output, ok = layer.forward_test({i: self.layers[l]['outputs'][o]
+                                                 for (i, (l, o)) in layer.previous_layers.items()}, label)
             self.layers[layer]['handled'] = True
             self.layers[layer]['outputs'] = output
             for o, next_layers in layer.next_layers.items():
@@ -50,9 +58,22 @@ class Model(nn.Module):
                 layer.update()
 
     def forward(self, input):
-        self.layers[self.input_layer]['outputs'] = input
+        self.layers[self.input_layer]['outputs']['out'] = input
         for layer in self.layers_order:
+            # logger.debug(layer)
             input = {i: self.layers[l]['outputs'][o] for (i, (l, o)) in layer.previous_layers.items()}
-            output = layer.forward(input)
+            # input = {}
+            # for (i, (l, o)) in layer.previous_layers.items():
+            #     logger.debug(f'({i}, ({l}, {o}))')
+            #     logger.debug(self.layers[l]['outputs'][o])
+            #     input[i] = self.layers[l]['outputs'][o]
+            try:
+                output = layer.forward(input)
+            except Exception as e:
+                logger.error(e)
+                layer.state.error()
+                logger.info(layer)
+                logger.info({k: v.shape for k, v in input.items()})
+                raise e
             self.layers[layer]['outputs'] = output
-        return output
+        return output['out']

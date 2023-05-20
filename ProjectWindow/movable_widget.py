@@ -219,7 +219,8 @@ class MovableWidget(QWidget):
             self.setCursorShape(p)
             return
 
-        if (self.mode == Mode.MOVE or self.mode == Mode.NONE) and e.buttons() and QtCore.Qt.MouseButton.LeftButton:
+        if (self.mode == Mode.MOVE or self.mode == Mode.NONE) and e.buttons() and QtCore.Qt.MouseButton.LeftButton and\
+            self.position is not None:
             toMove = e.globalPosition().toPoint() - self.position
             if toMove.x() < 0:
                 toMove.setX(0)

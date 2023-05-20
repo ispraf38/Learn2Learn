@@ -230,12 +230,12 @@ class ARandomContrast(PrehandleLayer):
 class AResizeMenu(PrehandleLayerMenu):
     def parameters(self):
         height = QSpinBox()
-        height.setValue(32)
         height.setMaximum(10000)
+        height.setValue(256)
 
         width = QSpinBox()
-        width.setValue(32)
         width.setMaximum(10000)
+        width.setValue(256)
 
         interpolation = QSpinBox()
         interpolation.setMaximum(4)

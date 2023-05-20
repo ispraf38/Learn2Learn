@@ -9,6 +9,7 @@ from ProjectWindow.utils import Config, MenuContainer, WidgetWithTabs
 from ProjectWindow.SettingsWidget.settings_widget import SettingsWidget
 from ProjectWindow.DataTab.data_tab import DataTab
 from ProjectWindow.ModelTab.model_tab import ModelTab
+from ProjectWindow.LearningTab.learning_tab import LearningTab
 
 from loguru import logger
 
@@ -24,18 +25,33 @@ class MainWidget(WidgetWithTabs):
 
         self.model = ModelTab(self.menu_container, self.config)
 
+        self.learning = LearningTab(self.menu_container, self.config)
+
         self.setTabPosition(QTabWidget.TabPosition.West)
         self.addTab(self.settings, 'Настройки')
         self.addTab(self.data, 'Данные')
         self.addTab(self.model, 'Модель')
+        self.addTab(self.learning, 'Обучение')
 
         self.currentChanged.connect(self.data.gallery.update_visible_images)
         self.data.prehandle.save_button.clicked.connect(self.set_input_layer_dataloader)
+        self.learning.run.menu.run_button.clicked.connect(self.run)
 
     def set_input_layer_dataloader(self):
         self.model.constructor.input_layer.state.not_checked()
         self.data.reset_dataloader()
         self.model.constructor.input_layer.set_dataloader(self.data.train_dataloader, self.data.val_dataloader)
+
+    def run(self):
+        try:
+            self.learning.run.run(self.data.train_dataloader,
+                                  self.data.val_dataloader,
+                                  self.model.loss.loss.parameter,
+                                  self.model.loss.optim.parameter,
+                                  self.model.constructor.model,
+                                  self.config.num_epochs)
+        except Exception as e:
+            logger.error(e)
 
 
 class ProjectWindow(QMainWindow):
@@ -80,7 +96,7 @@ class ProjectWindow(QMainWindow):
         if not hasattr(self.config, 'current_model_file'):
             self.config.current_model_file = os.path.join(self.config.models_path, self.main_config.current_model_file)
 
-        for atr in ['parameter_widgets', 'batch_size', 'val_frac']:
+        for atr in ['parameter_widgets', 'batch_size', 'val_frac', 'num_epochs']:
             if not hasattr(self.config, atr):
                 self.config.__setattr__(atr, self.main_config.__getattribute__(atr))
 

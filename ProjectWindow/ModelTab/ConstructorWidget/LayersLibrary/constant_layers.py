@@ -45,4 +45,4 @@ class EyeLayer(Layer):
                                           name='Eye', color=QColor(196, 196, 196), in_buttons=[])
 
     def forward(self, x):
-        return self.F()
+        return {'out': self.F()}

@@ -88,7 +88,7 @@ class ProdLayer(Layer):
                                           name='Prod', color=QColor(196, 196, 196), in_buttons=['x', 'y'])
 
     def forward(self, x):
-        return self.F(**x)
+        return {'out': self.F(**x)}
 
 
 class nnUnsqueezeLayer(nn.Module):
@@ -125,11 +125,14 @@ class UnsqueezeLayer(Layer):
 
 
 class nnCatLayer(nn.Module):
-    def __init__(self, dim):
+    def __init__(self, dim, repeat_to_batch_size: bool = False):
         super(nnCatLayer, self).__init__()
         self.dim_ = dim
+        self.repeat_to_batch_size = repeat_to_batch_size
 
     def forward(self, x, y):
+        if self.repeat_to_batch_size:
+            y = y.repeat(x.shape[0], *[1 for _ in range(len(y.shape[1:]))])
         return torch.cat((x, y), dim=self.dim_)
 
 
@@ -141,8 +144,12 @@ class CatLayerMenu(LayerMenu):
     def parameters(self):
         dim = QSpinBox()
 
+        repeat_to_batch_size = QCheckBox()
+        repeat_to_batch_size.setChecked(False)
+
         self.params = {
-            'dim': dim
+            'dim': dim,
+            'repeat_to_batch_size': repeat_to_batch_size
         }
 
 
@@ -156,22 +163,8 @@ class CatLayer(Layer):
         super(CatLayer, self).__init__(menu_container, config, parent, id, nnCatLayer, CatLayerMenu, pos,
                                           name='Cat', color=QColor(196, 196, 196), in_buttons=['x', 'y'])
 
-    def forward_test(self, x):
-        try:
-            out = self.F(**x)
-        except Exception as e:
-            logger.error(e)
-            self.state.error()
-            self.update()
-            logger.error(f'Forward test failed: {self}')
-            return {}, False
-        else:
-            self.state.ok()
-            self.update()
-            self.current_output = {'out': out}
-            self.update_in_out_menu()
-            logger.success(f'Forward test succeeded: {self}')
-            return self.current_output, True
+    def forward(self, x):
+        return {'out': self.F(**x)}
 
 
 class nnRepeatLayer(nn.Module):

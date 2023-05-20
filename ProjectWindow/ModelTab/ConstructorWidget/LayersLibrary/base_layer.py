@@ -321,13 +321,13 @@ class Layer(MovableWidget):
         else:
             self.state.ok()
             self.update()
-            self.current_output = {'out': out}
+            self.current_output = out
             self.update_in_out_menu()
             logger.success(f'Forward test succeeded: {self}')
             return self.current_output, True
 
     def forward(self, x):
-        return self.F(x['in'])
+        return {'out': self.F(x['in'])}
 
     def get_dict(self):
         return self.full_name, {
@@ -371,6 +371,7 @@ class InputLayer(Layer):
                                          name='InputLayer', in_buttons=[])
         self.train_dataloader = None
         self.val_dataloader = None
+        self.current_label = None
 
     def set_dataloader(self, train: DataLoader, val: DataLoader):
         self.train_dataloader = train
@@ -379,9 +380,11 @@ class InputLayer(Layer):
     def compile(self):
         try:
             for batch in self.train_dataloader:
-                pass
+                # pass
+                break
             for batch in self.val_dataloader:
-                pass
+                # pass
+                break
         except Exception as e:
             logger.error(e)
             self.state.compile_error()
@@ -410,6 +413,7 @@ class InputLayer(Layer):
             self.state.ok()
             self.update()
             self.current_output = {'out': out[0]}
+            self.current_label = out[1]
             self.update_in_out_menu()
             logger.success(f'Forward test succeeded: {self}')
             return self.current_output, True
@@ -424,17 +428,41 @@ class OutputLayer(Layer):
                  pos: QPoint = QPoint(10, 10)):
         super(OutputLayer, self).__init__(menu_container, config, parent, id, Module, OutputLayerMenu, pos,
                                           name='OutputLayer', out_buttons=[])
+        self.loss = None
+        self.loss_widget = None
+
+    def set_loss_optim(self, loss):
+        self.loss_widget = loss
 
     def compile(self) -> bool:
-        self.state.compiled()
-        self.update()
-        logger.success(f'Compilation succeeded: {self}')
-        return True
+        try:
+            self.loss = self.loss_widget.parameter.compile()
+        except Exception as e:
+            logger.error(e)
+            self.state.compile_error()
+            self.update()
+            logger.error(f'Compilation failed: {self}')
+            return False
+        else:
+            self.state.compiled()
+            self.update()
+            logger.success(f'Compilation succeeded: {self}')
+            return True
 
-    def forward_test(self, x) -> Tuple[Dict[str, Any], bool]:
-        self.state.ok()
-        self.update()
-        self.current_output = {}
-        self.update_in_out_menu()
-        logger.success(f'Forward test succeeded: {self}')
-        return self.current_output, True
+    def forward_test(self, x, label) -> Tuple[Dict[str, Any], bool]:
+        try:
+            loss = self.loss(x['in'], label)
+            loss.backward()
+        except Exception as e:
+            logger.error(e)
+            self.state.error()
+            self.update()
+            logger.error(f'Forward test failed: {self}')
+            return {}, False
+        else:
+            self.state.ok()
+            self.update()
+            self.current_output = {}
+            self.update_in_out_menu()
+            logger.success(f'Forward test succeeded: {self}')
+            return self.current_output, True
