@@ -368,7 +368,7 @@ class InputLayer(Layer):
                  id: int,
                  pos: QPoint = QPoint(10, 10)):
         super(InputLayer, self).__init__(menu_container, config, parent, id, Module, InputLayerMenu, pos,
-                                         name='InputLayer', in_buttons=[])
+                                         name='InputLayer', in_buttons=[], color=QColor(255, 255, 255))
         self.train_dataloader = None
         self.val_dataloader = None
         self.current_label = None
@@ -427,7 +427,7 @@ class OutputLayer(Layer):
                  id: int,
                  pos: QPoint = QPoint(10, 10)):
         super(OutputLayer, self).__init__(menu_container, config, parent, id, Module, OutputLayerMenu, pos,
-                                          name='OutputLayer', out_buttons=[])
+                                          name='OutputLayer', out_buttons=[], color=QColor(255, 255, 255))
         self.loss = None
         self.loss_widget = None
 

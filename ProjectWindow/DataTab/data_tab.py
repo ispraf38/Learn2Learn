@@ -8,6 +8,7 @@ from ProjectWindow.DataTab.MainWidget.main_widget import DataMainWidget
 from ProjectWindow.DataTab.GalleryWidget.gallery_widget import GalleryWidget
 from ProjectWindow.DataTab.LabelerWidget.labeler_widget import LabelerWidget
 from ProjectWindow.DataTab.PrehandleWidget.prehandle_widget import PrehandleWidget
+from ProjectWindow.DataTab.DataloaderWidget.dataloader_widget import DataloaderWidget
 
 from loguru import logger
 from torch.utils.data import DataLoader, Subset
@@ -21,6 +22,7 @@ class DataTab(WidgetWithTabs):
 
         self.json_handler = JsonHandler(config)
 
+        self.dataloader = DataloaderWidget(self.menu_container, self.config)
         self.main_widget = DataMainWidget(self.menu_container, self.config)
         self.gallery = GalleryWidget(self.menu_container, self.config, self.json_handler)
         self.labeler = LabelerWidget(self.menu_container, self.config, self.json_handler)
@@ -28,6 +30,7 @@ class DataTab(WidgetWithTabs):
 
         self.json_handler.image_changed.connect(self.update_current_image)
 
+        self.addTab(self.dataloader, 'Загрузчик данных')
         self.addTab(self.main_widget, 'Основное')
         self.addTab(self.gallery, 'Галерея')
         self.addTab(self.labeler, 'Разметка')
@@ -43,7 +46,8 @@ class DataTab(WidgetWithTabs):
 
     def reset_dataloader(self):
         self.prehandle.gen_transform()
-        dataset = self.main_widget.model_type.dataset_type(self.config, transform=self.prehandle.transform)
+        # dataset = self.main_widget.model_type.dataset_type(self.config, transform=self.prehandle.transform)
+        dataset = self.dataloader.dataset_class(transform=self.prehandle.transform)
         train_ind, val_ind = train_test_split(range(len(dataset)),
                                                     test_size=self.config.val_frac,
                                                     shuffle=True)
