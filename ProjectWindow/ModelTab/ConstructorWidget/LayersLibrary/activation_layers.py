@@ -28,7 +28,7 @@ class ReLULayer(Layer):
 class SigmoidMenu(LayerMenu):
     @property
     def description(self):
-        return 'Поэлементный максимум от элемента и нуля'
+        return 'Поэлементно применяет функцию сигмоиды'
 
 
 class SigmoidLayer(Layer):

@@ -11,6 +11,8 @@ from typing import Dict
 from functools import partial
 from loguru import logger
 
+FONT = QFont('Ariel', 16)
+
 LOSSES = {
     'MSELoss': MSELossWidget,
     'BCELoss': BCELossWidget,
@@ -34,6 +36,7 @@ class LearningParameterMenu(MenuWidget):
     def create_parameters_menu(self, parameters):
         for name, widget in parameters.items():
             button = QPushButton(name)
+            button.setFont(FONT)
             button.clicked.connect(partial(self.parameter_chosen.emit, widget))
             self.layout().addWidget(button)
 
@@ -50,11 +53,14 @@ class LearningParameterWidget(WidgetWithMenu):
         self.menu.parameter_chosen.connect(self.reset_parameter)
 
         self.label = QLabel(name)
+        self.label.setFont(FONT)
 
         self.change_parameter_button = QPushButton('Изменить')
         self.change_parameter_button.clicked.connect(self.activate_menu)
+        self.change_parameter_button.setFont(FONT)
 
         self.parameter = BaseParameterWidget(menu_container, config)
+        self.parameter.setFont(FONT)
         self.update_layout()
 
     def load_parameter(self):
@@ -81,6 +87,7 @@ class MainLossMenu(MenuWidget):
         super(MainLossMenu, self).__init__(config)
         self.container = MenuContainer()
         self.save = QPushButton('Сохранить')
+        self.save.setFont(FONT)
 
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self.container)

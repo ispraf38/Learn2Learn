@@ -46,3 +46,41 @@ class EyeLayer(Layer):
 
     def forward(self, x):
         return {'out': self.F()}
+
+
+class nnIntLayer(nn.Module):
+    def __init__(self, n):
+        super(nnIntLayer, self).__init__()
+        self.out = n
+
+    def forward(self):
+        return self.out
+
+
+class IntLayerMenu(LayerMenu):
+    @property
+    def description(self):
+        return 'Возвращает заданное целое число'
+
+    def parameters(self):
+        n = QSpinBox()
+        n.setMaximum(100000)
+        n.setMinimum(-100000)
+
+        self.params = {
+            'n': n
+        }
+
+
+class IntLayer(Layer):
+    def __init__(self,
+                 menu_container: MenuContainer,
+                 config: Config,
+                 parent: QWidget,
+                 id: int,
+                 pos: QPoint = QPoint(10, 10)):
+        super(IntLayer, self).__init__(menu_container, config, parent, id, nnIntLayer, IntLayerMenu, pos,
+                                          name='Int', color=QColor(196, 196, 196), in_buttons=[])
+
+    def forward(self, x):
+        return {'out': self.F()}

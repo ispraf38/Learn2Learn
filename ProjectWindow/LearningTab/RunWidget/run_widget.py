@@ -5,9 +5,12 @@ from PyQt6.QtCore import *
 from ProjectWindow.utils import Config, MenuWidget, WidgetWithMenu, MenuContainer
 from ProjectWindow.LearningTab.RunWidget.worker import NNWorker
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 import pandas as pd
+
+
+FONT = QFont('Ariel', 16)
 
 
 class MplCanvas(FigureCanvasQTAgg):
@@ -21,6 +24,7 @@ class RunMenu(MenuWidget):
     def __init__(self, config: Config):
         super().__init__(config)
         self.run_button = QPushButton('Запуск')
+        self.run_button.setFont(FONT)
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self.run_button)
 
@@ -31,13 +35,18 @@ class RunWidget(WidgetWithMenu):
         self.worker = None
         self.thread = None
         self.current_epoch = QLabel('Модель не запущена')
+        self.current_epoch.setFont(FONT)
 
-        self.loss_plot = MplCanvas(self, width=10)
+        self.loss_plot = MplCanvas(self, width=10, height=8)
+
+        self.toolbar = NavigationToolbar(self.loss_plot)
+        self.toolbar.setFont(FONT)
 
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(0)
 
         self.setLayout(QVBoxLayout())
+        self.layout().addWidget(self.toolbar)
         self.layout().addWidget(self.loss_plot)
 
         layout = QHBoxLayout()
@@ -45,7 +54,7 @@ class RunWidget(WidgetWithMenu):
         layout.addWidget(self.progress_bar)
         widget = QWidget()
         widget.setLayout(layout)
-        self.layout().addWidget(widget)
+        self.layout().addWidget(widget, alignment=Qt.AlignmentFlag.AlignBottom)
 
     def update_epoch(self, epoch):
         self.current_epoch.setText(f'Текущая эпоха: {epoch}')

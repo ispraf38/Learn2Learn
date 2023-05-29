@@ -9,12 +9,16 @@ from typing import Dict, Any, Tuple, Optional
 from functools import partial
 
 
+FONT = QFont('Arial', 16)
+
+
 def update_config(key, widget, config):
     config.__setattr__(key, get_params_from_widget(widget))
 
 
 def create_widget_by_config(key: str, descr: Dict[str, Any], config: Config) -> Tuple[QLabel, QWidget]:
     label = QLabel(key)
+    label.setFont(FONT)
     widget = QLabel()
     signal = None
     value = config.__getattribute__(key)
@@ -40,7 +44,7 @@ def create_widget_by_config(key: str, descr: Dict[str, Any], config: Config) -> 
             widget.setDecimals(descr['decimals'])
         signal = widget.valueChanged
         widget.setValue(value)
-
+    widget.setFont(FONT)
     if signal is not None:
         signal.connect(partial(update_config, key, widget, config))
     return label, widget
@@ -50,9 +54,10 @@ class SettingsMenu(MenuWidget):
     def __init__(self, config: Config):
         super(SettingsMenu, self).__init__(config)
         self.setLayout(QVBoxLayout())
-        self.layout().addWidget(QLabel('Меню настроек.\n'
-                                       'Здесь можно менять параметры, если выбрать что-нибудь слева.\n'
-                                       '(Не работает)'))
+        label = QLabel('Меню настроек.\nЗдесь можно менять параметры, если выбрать что-нибудь слева.')
+        label.setFont(FONT)
+        label.setWordWrap(True)
+        self.layout().addWidget(label)
 
 
 class SettingsWidget(WidgetWithMenu):

@@ -78,6 +78,7 @@ class WidgetWithTabs(QTabWidget):
         self.currentChanged.connect(self.activate_menu)
         self.config = config
         self.menu_container = menu_container
+        self.setFont(QFont('Arial', 20))
 
     def activate_menu(self):
         if self.count() > 0:

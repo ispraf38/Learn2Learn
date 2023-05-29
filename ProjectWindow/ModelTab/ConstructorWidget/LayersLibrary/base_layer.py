@@ -61,6 +61,9 @@ class LayerState:
         return self.STATES[self.state]['color']
 
 
+FONT = QFont('Ariel', 16)
+
+
 class LayerMenu(MenuWidget):
     param_changed = pyqtSignal()
 
@@ -70,6 +73,8 @@ class LayerMenu(MenuWidget):
         label = QLabel(f'{name}\n{self.description}\nПараметры:')
         label.setAlignment(Qt.AlignmentFlag.AlignTop)
         label.setMaximumHeight(120)
+        label.setFont(FONT)
+        label.setWordWrap(True)
         self.layout().addWidget(label)
 
         self.params = {}
@@ -93,7 +98,10 @@ class LayerMenu(MenuWidget):
     def build_parameters_widget(self):
         layout = QGridLayout()
         for n, (name, widget) in enumerate(self.params.items()):
-            layout.addWidget(QLabel(name), n, 0)
+            label = QLabel(name)
+            label.setFont(FONT)
+            widget.setFont(FONT)
+            layout.addWidget(label, n, 0)
             layout.addWidget(widget, n, 1)
             get_signal_from_widget(widget).connect(self.param_changed.emit)
         widget = QWidget()
@@ -104,15 +112,21 @@ class LayerMenu(MenuWidget):
         if self.in_info.layout().currentWidget() is not None:
             self.in_info.layout().currentWidget().close()
         layout = QGridLayout()
-        layout.addWidget(QLabel('Inputs:'), 0, 0)
+        label = QLabel('Inputs:')
+        label.setFont(FONT)
+        layout.addWidget(label, 0, 0)
         for n, (k, v) in enumerate(inputs.items()):
-            layout.addWidget(QLabel(k), n + 1, 1)
+            label = QLabel(k)
+            label.setFont(FONT)
+            layout.addWidget(label, n + 1, 1)
             if v is None:
                 widget = (QLabel('None'))
             elif isinstance(v, torch.Tensor):
                 widget = QLabel(f'Тензор размерности {v.shape}')
             else:
                 widget = QLabel('Неизвестный тип данных')
+            widget.setFont(FONT)
+            widget.setWordWrap(True)
             layout.addWidget(widget, n + 1, 2)
         widget = QWidget()
         widget.setLayout(layout)
@@ -123,15 +137,21 @@ class LayerMenu(MenuWidget):
         if self.out_info.layout().currentWidget() is not None:
             self.out_info.layout().currentWidget().close()
         layout = QGridLayout()
-        layout.addWidget(QLabel('Outputs:'), 0, 0)
+        label = QLabel('Outputs:')
+        label.setFont(FONT)
+        layout.addWidget(label, 0, 0)
         for n, (k, v) in enumerate(outputs.items()):
-            layout.addWidget(QLabel(k), n + 1, 1)
+            label = QLabel(k)
+            label.setFont(FONT)
+            layout.addWidget(label, n + 1, 1)
             if v is None:
                 widget = (QLabel('None'))
             elif isinstance(v, torch.Tensor):
                 widget = QLabel(f'Тензор размерности {v.shape}')
             else:
                 widget = QLabel('Неизвестный тип данных')
+            widget.setFont(FONT)
+            widget.setWordWrap(True)
             layout.addWidget(widget, n + 1, 2)
         widget = QWidget()
         widget.setLayout(layout)
@@ -200,6 +220,7 @@ class Layer(MovableWidget):
         self.next_layers: Dict[str, List[Tuple[Optional[Layer], Optional[str]]]] = {i: [] for i in self.outputs}
 
         self.name = QLabel(self.full_name)
+        self.name.setFont(QFont('Ariel', 12))
         metrics = QFontMetrics(self.name.font())
         bounding_rect = metrics.boundingRect(self.full_name)
         self.name.setAlignment(Qt.AlignmentFlag.AlignCenter)

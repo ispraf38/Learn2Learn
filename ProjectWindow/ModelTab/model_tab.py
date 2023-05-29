@@ -8,6 +8,7 @@ from ProjectWindow.ModelTab.LossWidget.loss_widget import MainLossWidget
 class ModelTab(WidgetWithTabs):
     def __init__(self, menu_container: MenuContainer, config: Config):
         super(ModelTab, self).__init__(menu_container, config)
+        self.setTabPosition(QTabWidget.TabPosition.West)
 
         self.constructor = ConstructorWidget(menu_container, config)
         self.loss = MainLossWidget(menu_container, config)

@@ -7,6 +7,7 @@ from ProjectWindow.LearningTab.RunWidget.run_widget import RunWidget
 class LearningTab(WidgetWithTabs):
     def __init__(self, menu_container: MenuContainer, config: Config):
         super(LearningTab, self).__init__(menu_container, config)
+        self.setTabPosition(QTabWidget.TabPosition.West)
 
         self.run = RunWidget(menu_container, config)
 

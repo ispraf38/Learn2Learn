@@ -10,6 +10,7 @@ from ProjectWindow.SettingsWidget.settings_widget import SettingsWidget
 from ProjectWindow.DataTab.data_tab import DataTab
 from ProjectWindow.ModelTab.model_tab import ModelTab
 from ProjectWindow.LearningTab.learning_tab import LearningTab
+from ProjectWindow.LabelTab.label_tab import LabelTab
 
 from loguru import logger
 
@@ -27,13 +28,15 @@ class MainWidget(WidgetWithTabs):
 
         self.learning = LearningTab(self.menu_container, self.config)
 
-        self.setTabPosition(QTabWidget.TabPosition.West)
+        self.label = LabelTab(self.menu_container, self.config)
+
         self.addTab(self.settings, 'Настройки')
+        self.addTab(self.label, 'Разметка данных')
         self.addTab(self.data, 'Данные')
         self.addTab(self.model, 'Модель')
         self.addTab(self.learning, 'Обучение')
 
-        self.currentChanged.connect(self.data.gallery.update_visible_images)
+        self.currentChanged.connect(self.label.gallery.update_visible_images)
         self.data.prehandle.save_button.clicked.connect(self.set_input_layer_dataloader)
         self.learning.run.menu.run_button.clicked.connect(self.run)
 
@@ -81,14 +84,14 @@ class ProjectWindow(QMainWindow):
         if not hasattr(self.config, 'data_path'):
             self.config.data_path = self.main_config.project_data_default_path.replace('<project_name>',
                                                                                        self.config.project_name)
-            if not os.path.exists(self.config.data_path):
-                os.mkdir(self.config.data_path)
+        if not os.path.exists(self.config.data_path):
+            os.mkdir(self.config.data_path)
 
         if not hasattr(self.config, 'models_path'):
             self.config.models_path = self.main_config.project_models_default_path.replace('<project_name>',
                                                                                        self.config.project_name)
-            if not os.path.exists(self.config.models_path):
-                os.mkdir(self.config.models_path)
+        if not os.path.exists(self.config.models_path):
+            os.mkdir(self.config.models_path)
 
         if not hasattr(self.config, 'json_path'):
             self.config.json_path = os.path.join(self.config.data_path, self.main_config.data_json_default_name)

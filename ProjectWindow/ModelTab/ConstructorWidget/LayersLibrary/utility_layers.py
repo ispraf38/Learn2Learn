@@ -63,7 +63,7 @@ class SumLayer(Layer):
                                           name='Sum', color=QColor(196, 196, 196), in_buttons=['x', 'y'])
 
     def forward(self, x):
-        return self.F(**x)
+        return {'out': self.F(**x)}
 
 
 class nnProdLayer(nn.Module):

@@ -10,6 +10,9 @@ import torch.nn as nn
 from typing import Any
 
 
+FONT = QFont('Ariel', 16)
+
+
 def base_loss_function(*args, **kwargs):
     raise NotImplementedError('Функция потерь не выбрана')
 
@@ -19,6 +22,8 @@ class BaseParameterMenu(MenuWidget):
         super().__init__(config)
         self.setLayout(QVBoxLayout())
         label = QLabel(f'{self.name}\n{self.description}\nПараметры:')
+        label.setFont(FONT)
+        label.setWordWrap(True)
         label.setAlignment(Qt.AlignmentFlag.AlignTop)
         label.setMaximumHeight(120)
         self.layout().addWidget(label)
@@ -41,7 +46,10 @@ class BaseParameterMenu(MenuWidget):
     def build_parameters_widget(self):
         layout = QGridLayout()
         for n, (name, widget) in enumerate(self.params.items()):
-            layout.addWidget(QLabel(name), n, 0)
+            label = QLabel(name)
+            label.setFont(FONT)
+            widget.setFont(FONT)
+            layout.addWidget(label, n, 0)
             layout.addWidget(widget, n, 1)
         widget = QWidget()
         widget.setLayout(layout)
@@ -55,6 +63,7 @@ class BaseParameterWidget(WidgetWithMenu):
         self.function = function
         self.param_function = None
         self.button = QPushButton(self.menu.name)
+        self.button.setFont(FONT)
         self.button.clicked.connect(self.activate_menu)
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.button)

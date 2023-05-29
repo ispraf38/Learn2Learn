@@ -40,7 +40,8 @@ LAYERS = {
     'Eye': EyeLayer,
     'Unsqueeze': UnsqueezeLayer,
     'Cat': CatLayer,
-    'Repeat': RepeatLayer
+    'Repeat': RepeatLayer,
+    'Int': IntLayer
 }
 
 
@@ -55,7 +56,8 @@ BUTTONS = {
             'Conv2d': Conv2dLayer
         },
         'Constant layers': {
-            'Eye': EyeLayer
+            'Eye': EyeLayer,
+            'Int': IntLayer
         },
         'Dropout layers': {
             'Dropout': DropoutLayer
@@ -85,6 +87,9 @@ BUTTONS = {
 }
 
 
+FONT = QFont('Ariel', 16)
+
+
 class MainConstructorMenu(QWidget):
     create_layer = pyqtSignal(type(Layer))
 
@@ -108,6 +113,7 @@ class MainConstructorMenu(QWidget):
         back_buttons = []
         for k, v in buttons.items():
             button = QPushButton(k)
+            button.setFont(FONT)
             if type(v) == dict:
                 widget, bb = self.add_layout(v, k, True)
                 back_buttons.append(bb)
@@ -130,6 +136,7 @@ class MainConstructorMenu(QWidget):
 
         if back:
             back_button = QPushButton('Назад')
+            back_button.setFont(FONT)
             layout.addWidget(back_button)
         else:
             back_button = None

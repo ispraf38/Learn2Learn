@@ -119,5 +119,5 @@ class Conv2dLayer(Layer):
                  parent: QWidget,
                  id: int,
                  pos: QPoint = QPoint(10, 10)):
-        super(Conv2dLayer, self).__init__(menu_container, config, parent, id, nn.Conv2d, Conv1dMenu, pos,
+        super(Conv2dLayer, self).__init__(menu_container, config, parent, id, nn.Conv2d, Conv2dMenu, pos,
                                           name='Conv2d', color=QColor(255, 255, 96))

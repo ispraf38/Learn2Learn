@@ -27,7 +27,7 @@ class IdentityLayer(Layer):
 class LinearMenu(LayerMenu):
     @property
     def description(self):
-        return 'Применяет линейное преобразование ко входныи данным'
+        return 'Применяет линейное преобразование ко входным данным'
 
     def parameters(self):
         in_features = QSpinBox()

@@ -9,11 +9,16 @@ from typing import Type, Any
 import albumentations as A
 
 
+FONT = QFont('Ariel', 16)
+
+
 class PrehandleLayerMenu(MenuWidget):
     def __init__(self, config: Config):
         super(PrehandleLayerMenu, self).__init__(config)
         self.setLayout(QVBoxLayout())
         label = QLabel(f'{self.name}\n{self.description}\nПараметры:')
+        label.setWordWrap(True)
+        label.setFont(FONT)
         label.setAlignment(Qt.AlignmentFlag.AlignTop)
         label.setMaximumHeight(120)
         self.params = {}
@@ -35,7 +40,10 @@ class PrehandleLayerMenu(MenuWidget):
     def build_parameters_widget(self):
         layout = QGridLayout()
         for n, (name, widget) in enumerate(self.params.items()):
-            layout.addWidget(QLabel(name), n, 0)
+            label = QLabel(name)
+            label.setFont(FONT)
+            widget.setFont(FONT)
+            layout.addWidget(label, n, 0)
             layout.addWidget(widget, n, 1)
         widget = QWidget()
         widget.setLayout(layout)
@@ -51,6 +59,7 @@ class PrehandleLayer(WidgetWithMenu):
                  transform: Any = lambda x: x):
         super(PrehandleLayer, self).__init__(menu_container, config, menu)
         self.button = QPushButton(name)
+        self.button.setFont(FONT)
         self.button.clicked.connect(self.activate_menu)
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.button)

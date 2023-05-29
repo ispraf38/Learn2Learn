@@ -57,8 +57,8 @@ class AdamWOptimMenu(BaseParameterMenu):
             'weight_decay': weight_decay,
             'amsgrad': amsgrad,
             'maximize': maximize,
-            'capturable': capturable,
-            'differentiable': differentiable
+            # 'capturable': capturable,
+            # 'differentiable': differentiable
         }
 
 
@@ -114,7 +114,7 @@ class SGDOptimMenu(BaseParameterMenu):
             'dampening': dampening,
             'nesterov': nesterov,
             'maximize': maximize,
-            'differentiable': differentiable
+            # 'differentiable': differentiable
         }
 
 

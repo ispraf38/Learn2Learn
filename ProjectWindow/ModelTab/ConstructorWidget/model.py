@@ -21,7 +21,7 @@ class Model(nn.Module):
         }
         self.layers_order = []
         label = None
-        layers_to_run = [self.input_layer] + [layer for layer in layers if layer.previous_layers == {}]
+        layers_to_run = [layer for layer in layers if layer.previous_layers == {}]
         while layers_to_run:
             layer = layers_to_run.pop(0)
             logger.debug(layer)

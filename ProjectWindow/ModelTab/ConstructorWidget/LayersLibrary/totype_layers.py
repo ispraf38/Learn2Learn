@@ -29,7 +29,7 @@ TYPES = {
 class ToTypeMenu(LayerMenu):
     @property
     def description(self):
-        return 'Снижает размерность входящего тензора'
+        return 'Приводит тензор к заданному типу'
 
     def parameters(self):
         type_ = QComboBox()

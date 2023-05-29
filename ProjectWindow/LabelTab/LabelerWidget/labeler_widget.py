@@ -10,8 +10,11 @@ from PyQt6.QtWidgets import *
 from loguru import logger
 
 from ProjectWindow.utils import WidgetWithMenu, MenuContainer, MenuWidget, Config
-from ProjectWindow.DataTab.data_handler import JsonHandler
-from ProjectWindow.DataTab.LabelerWidget.utils import Label
+from ProjectWindow.LabelTab.data_handler import JsonHandler
+from ProjectWindow.LabelTab.LabelerWidget.utils import Label
+
+
+FONT = QFont('Ariel', 16)
 
 
 class LabelWidget(QLabel):
@@ -183,19 +186,25 @@ class LabelMenu(MenuWidget):
         self.add_label_button = QPushButton('Режим добавления меток')
         self.add_label_button.setCheckable(True)
         self.add_label_button.setChecked(True)
+        self.add_label_button.setFont(FONT)
 
         self.remove_label_button = QPushButton('Удалить выбранную метку')
+        self.remove_label_button.setFont(FONT)
 
         self.edit_label_button = QPushButton('Режим изменения меток')
         self.edit_label_button.setCheckable(True)
         self.edit_label_button.setChecked(False)
+        self.edit_label_button.setFont(FONT)
 
         self.remove_all_button = QPushButton("Удалить все метки")
+        self.remove_all_button.setFont(FONT)
 
         self.labels_list = QListWidget()
 
         self.previous_button = QPushButton('Предыдущий')
+        self.previous_button.setFont(FONT)
         self.next_button = QPushButton('Следующий')
+        self.next_button.setFont(FONT)
 
         buttons = QWidget()
         buttons.setLayout(QHBoxLayout())

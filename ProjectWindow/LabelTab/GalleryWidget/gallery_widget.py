@@ -3,7 +3,7 @@ from PyQt6.QtGui import *
 from PyQt6.QtCore import *
 
 from ProjectWindow.utils import WidgetWithMenu, MenuContainer, Config, MenuWidget
-from ProjectWindow.DataTab.data_handler import JsonHandler
+from ProjectWindow.LabelTab.data_handler import JsonHandler
 
 import os
 
@@ -15,16 +15,18 @@ class GalleryMenu(MenuWidget):
         super(GalleryMenu, self).__init__(config)
         self.json_handler = None
 
-        self.update_disk = QPushButton('Обновить (не работает)')
-        self.merge_labels = QPushButton('Объединить разметку (не работает)')
+        # self.update_disk = QPushButton('Обновить (не работает)')
+        # self.merge_labels = QPushButton('Объединить разметку (не работает)')
 
         self.name = QLabel('')
+        self.name.setWordWrap(True)
+        self.name.setFont(QFont('Arial', 16))
 
         self.labels = QListWidget()
 
         self.setLayout(QVBoxLayout())
-        self.layout().addWidget(self.update_disk)
-        self.layout().addWidget(self.merge_labels)
+        # self.layout().addWidget(self.update_disk)
+        # self.layout().addWidget(self.merge_labels)
         self.layout().addWidget(self.name)
         self.layout().addWidget(self.labels)
 
@@ -45,19 +47,21 @@ class GalleryItem(QWidget):
         self.image_name = image_name
         self.loaded = False
 
-        self.setFixedSize(200, 240)
+        self.setFixedSize(200, 260)
 
         self.icon = QPushButton()
         self.icon.setFixedSize(200, 200)
         self.icon.clicked.connect(lambda: json_handler.change_image(self.image_name))
 
         self.name = QLabel(image_name)
+        self.name.setFont(QFont('Arial', 8))
+        self.name.setWordWrap(True)
         self.name.setFixedSize(200, 40)
         self.name.setAlignment(Qt.AlignmentFlag.AlignBottom)
 
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self.icon)
-        self.layout().addWidget(self.name)
+        self.layout().addWidget(self.name, alignment=Qt.AlignmentFlag.AlignBottom)
 
     def load_image(self):
         logger.debug(f'Loading image {self.image_path}')

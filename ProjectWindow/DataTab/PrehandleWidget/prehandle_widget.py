@@ -32,6 +32,9 @@ BUTTONS = {
 }
 
 
+FONT = QFont('Ariel', 16)
+
+
 class PrehandleLayerMenu(QWidget):
     create_layer = pyqtSignal(type(PrehandleLayer))
 
@@ -51,6 +54,7 @@ class PrehandleLayerMenu(QWidget):
         back_buttons = []
         for k, v in buttons.items():
             button = QPushButton(k)
+            button.setFont(FONT)
             if type(v) == dict:
                 widget, bb = self.add_layout(v, k, True)
                 back_buttons.append(bb)
@@ -65,6 +69,7 @@ class PrehandleLayerMenu(QWidget):
 
         if back:
             back_button = QPushButton('Назад')
+            back_button.setFont(FONT)
             layout.addWidget(back_button)
         else:
             back_button = None
@@ -198,8 +203,10 @@ class PrehandleWidget(WidgetWithMenu):
         middle_widget.setFixedWidth(300)
 
         self.left_button = QPushButton('Выбрать изображение')
+        self.left_button.setFont(FONT)
         self.left_button.clicked.connect(self.choose_image)
         self.right_button = QPushButton('Обновить')
+        self.right_button.setFont(FONT)
         self.right_button.clicked.connect(partial(self.update_image, None))
 
         self.left_image = ImageWidget(config, left_widget)
@@ -216,6 +223,7 @@ class PrehandleWidget(WidgetWithMenu):
         self.menu.layer_menu.delete_layer.clicked.connect(self.middle_container.delete_current_layer)
 
         self.save_button = QPushButton('Сохранить')
+        self.save_button.setFont(FONT)
         self.save_button.clicked.connect(self.gen_transform)
 
         middle_widget.layout().addWidget(self.middle_container)
